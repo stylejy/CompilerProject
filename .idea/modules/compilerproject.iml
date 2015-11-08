@@ -18,10 +18,15 @@
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../target/scala-2.11/resource_managed/test" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/../../test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/../../rules" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../target" />
+      <excludeFolder url="file://$MODULE_DIR$/../../target/resolution-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/../../target/streams" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="SBT: org.scala-lang:scala-library:2.11.7:jar" level="project" />
+    <orderEntry type="library" name="SBT: com.chuusai:shapeless_2.11:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.parboiled:parboiled_2.11:2.1.0:jar" level="project" />
   </component>
 </module>
