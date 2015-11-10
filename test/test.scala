@@ -6,8 +6,9 @@
 object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
-    if (new TestParser("(println)").InputLine.run().isSuccess)
-      println("Yes, it is success :D")
+    val result = new TestParser("(prin(t)ln)").InputLine.run()
+    if (result.isSuccess)
+      println("Yes :D, it is " + result)
     else
       println("fail")
 

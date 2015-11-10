@@ -9,15 +9,15 @@ import org.parboiled2._
 class TestParser(val input: ParserInput) extends Parser {
   def InputLine = rule { Expression ~ EOI}
 
-  def Expression: Rule1[String] = rule {
-    '(' ~ Factor ~ ')'
+  def Expression: Rule1[Seq[Object]] = rule {
+    '(' ~ oneOrMore(Factor) ~ ')'
   }
 
-  def Factor = rule { Parens | Letter  }
-
-  def Parens = rule { '(' ~ Expression ~ ')' }
+  def Factor = rule { Letter | Number | Expression}
 
   def Letter = rule { capture(oneOrMore(CharPredicate.Alpha)) }
+
+  def Number = rule { capture(oneOrMore(CharPredicate.Digit)) }
 
 }
 
