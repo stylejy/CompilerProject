@@ -25,23 +25,13 @@ class TestParser(val input: ParserInput) extends Parser {
     Factor
   }
 
-  /*
-  def Term1: Rule1[Expr] = rule {
-    Term2 ~ zeroOrMore('+' ~ Term2 ~> Addition | '-' ~ Term2 ~> Substraction)
-  }
-
-  def Term2 = rule {
-    Factor ~ zeroOrMore('*' ~ Factor ~> Multiplication | '/' ~ Factor ~> Division)
-  }
-  */
-
   def Factor = rule { Number | Parens | Operator}
 
   def Parens = rule { '(' ~ Term ~ ')' }
 
   def Number = rule { capture(oneOrMore(CharPredicate.Digit)) ~> Value }
 
-  def Operator = rule { '+' ~ ' ' ~ (Term ~ ' ' ~ Term) ~> Addition | '-' ~ (Term ~ Term) ~> Substraction | '*' ~ (Term ~ Term) ~> Multiplication | '/' ~ (Term ~ Term) ~> Division }
+  def Operator = rule { '+' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Addition | '-' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Substraction | '*' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Multiplication | '/' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Division }
 
   def eval(expr: Expr): Int =
     expr match {

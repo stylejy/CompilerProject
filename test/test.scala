@@ -10,7 +10,7 @@ import scala.util.{Failure, Success}
 object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
-    val result = new TestParser("(+ 2 2)")
+    val result = new TestParser("(+ 10 (* 2 5))")
     result.InputLine.run() match {
       case Success(tree) => println("Result: " + result.eval(tree) + "\nTree: " + tree)
       case Failure(e: ParseError) => println("Expression is not valid")
