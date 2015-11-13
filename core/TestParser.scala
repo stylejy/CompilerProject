@@ -7,18 +7,49 @@ import org.parboiled2._
 
 //Very simple matching test roule
 class TestParser(val input: ParserInput) extends Parser {
+
+  sealed trait Expr
+  case class Value(value: String) extends Expr
+  case class Addition(firstValue: Expr, secondValue: Expr) extends Expr
+  case class Substraction(firstValue: Expr, secondValue: Expr) extends Expr
+  case class Multiplication(firstValue: Expr, secondValue: Expr) extends Expr
+  case class Division(firstValue: Expr, secondValue: Expr) extends Expr
+
   def InputLine = rule { Expression ~ EOI}
 
-  def Expression: Rule1[Seq[Object]] = rule {
-    '(' ~ oneOrMore(Factor | '"' ~ Factor ~ '"') ~ ')'
+  def Expression: Rule1[Expr] = rule {
+    '(' ~ Term ~ ')'
   }
 
-  def Factor = rule { Letter | Number | Expression | Space }
+  def Term: Rule1[Expr] = rule {
+    Factor
+  }
 
-  def Letter = rule { capture(oneOrMore(CharPredicate.Alpha)) }
+  /*
+  def Term1: Rule1[Expr] = rule {
+    Term2 ~ zeroOrMore('+' ~ Term2 ~> Addition | '-' ~ Term2 ~> Substraction)
+  }
 
-  def Number = rule { capture(oneOrMore(CharPredicate.Digit)) }
+  def Term2 = rule {
+    Factor ~ zeroOrMore('*' ~ Factor ~> Multiplication | '/' ~ Factor ~> Division)
+  }
+  */
 
-  def Space = rule { capture(oneOrMore(str(" "))) }
+  def Factor = rule { Number | Parens | Operator}
+
+  def Parens = rule { '(' ~ Term ~ ')' }
+
+  def Number = rule { capture(oneOrMore(CharPredicate.Digit)) ~> Value }
+
+  def Operator = rule { '+' ~ ' ' ~ (Term ~ ' ' ~ Term) ~> Addition | '-' ~ (Term ~ Term) ~> Substraction | '*' ~ (Term ~ Term) ~> Multiplication | '/' ~ (Term ~ Term) ~> Division }
+
+  def eval(expr: Expr): Int =
+    expr match {
+      case Value(v) => v.toInt
+      case Addition(a, b) => eval(a) + eval(b)
+      case Substraction(a, b) => eval(a) - eval(b)
+      case Multiplication(a, b) => eval(a) * eval(b)
+      case Division(a, b) => eval(a) / eval(b)
+    }
 }
 
