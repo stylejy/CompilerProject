@@ -6,11 +6,38 @@ import scala.collection.mutable.ListBuffer
   * Created by stylejy on 18/11/2015.
   * Thanks GOD for all.
   */
-class ByteCodeGenerator(classname: String, ASTList: ListBuffer[Object]) {
+class ByteCodeGenerator(classname: String, ast: Expr) {
+
+  val pw = new PrintWriter(new File(classname+".tg"))
+
+  def astManager(expr: Expr): Unit =
+    expr match {
+      case Value(v) =>
+        pw.write("iconst_" + v.toInt + "\n")
+      case Addition(a, b) =>
+        astManager(a)
+        astManager(b)
+        pw.write("iadd\n")
+      case Substraction(a, b) =>
+        astManager(a)
+        astManager(b)
+        pw.write("isub\n")
+      case Multiplication(a, b) =>
+        astManager(a)
+        astManager(b)
+        pw.write("imul\n")
+      case Division(a, b) =>
+        astManager(a)
+        astManager(b)
+        pw.write("idiv\n")
+      case Remainder(a, b) =>
+        astManager(a)
+        astManager(b)
+        pw.write("irem\n")
+    }
+
 
   def writer = {
-
-    val pw = new PrintWriter(new File(classname+".tg"))
 
     pw.write(".class public "+classname+"\n")
     pw.write(".super java/lang/Object\n\n")
@@ -21,18 +48,11 @@ class ByteCodeGenerator(classname: String, ASTList: ListBuffer[Object]) {
 
     pw.write("getstatic java/lang/System out Ljava/io/PrintStream;\n\n")
 
-    ASTList.head match {
-      case "Add" =>
-        for (i <- ASTList.reverse) {
-          if (i != "Add")
-            pw.write("iconst_"+i+"\n")
-          else
-            pw.write("iadd\n")
-        }
-        pw.write("\ninvokevirtual java/io/PrintStream println (I)V\n")
-    }
+    astManager(ast)
 
-    pw.write("return\n")
+    pw.write("invokevirtual java/io/PrintStream println (I)V\n")
+
+    pw.write("\nreturn\n")
     pw.write(".end method")
 
     pw.close()

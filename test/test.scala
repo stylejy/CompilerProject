@@ -11,12 +11,11 @@ object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
 
-    val result = new ArithmeticParser(args.head)
+    val result = new ArithmeticParser("(- 3 3)")
     result.InputLine.run() match {
       case Success(tree) =>
         println("Result: " + result.eval(tree) + "\nTree: " + tree)
-        println(result.list.mkString(", "))
-        val test = new ByteCodeGenerator(args.last, result.list)
+        val test = new ByteCodeGenerator("test", tree)
         test.writer
       case Failure(e: ParseError) => println("Expression is not valid")
       case Failure(e) => println("Unexpected error")
