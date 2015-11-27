@@ -7,24 +7,24 @@ import org.parboiled2._
   */
 
 //Very simple matching test roule
-class ArithmeticParser(val input: ParserInput) extends Parser {
+class ParsingRules(val input: ParserInput) extends Parser {
   def InputLine = rule { Expression ~ EOI}
 
   def Expression: Rule1[Expr] = rule {
-    '(' ~ Term ~ ')'
+    Term
   }
 
-  def Term: Rule1[Expr] = rule {
+  def Term = rule {
     Factor
   }
 
   def Factor = rule { Number | Parens | SimpleArithmetic }
 
-  def Parens = rule { '(' ~ Term ~ ')' }
+  def Parens = rule { '(' ~ Expression ~ ')' }
 
-  def Number = rule { capture(oneOrMore(CharPredicate.Digit)) ~> Value }
+  def Number = rule { capture((""|"+"|"-") ~ oneOrMore(CharPredicate.Digit)) ~> Value }
 
-  def SimpleArithmetic = rule { '+' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Addition | '-' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Substraction | '*' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Multiplication | '/' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Division | '%' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Remainder }
+  def SimpleArithmetic = rule { '+' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Addition | '-' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Substraction | '*' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Multiplication | '/' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Division | '%' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Remainder }
 
   //For testing
   def eval(expr: Expr): Int =
