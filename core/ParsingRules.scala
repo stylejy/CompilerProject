@@ -18,7 +18,11 @@ class ParsingRules(val input: ParserInput) extends Parser {
     Factor
   }
 
-  def Factor = rule { Number | Parens | SimpleArithmetic }
+  def Factor = rule { Number | String | Parens | SimpleArithmetic }
+
+  def String = rule { "\"" ~ Characters ~ "\"" }
+
+  def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> ValueString }
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
@@ -30,6 +34,10 @@ class ParsingRules(val input: ParserInput) extends Parser {
   def eval(expr: Expr): Int =
     expr match {
       case Value(v) => v.toInt
+      case ValueString(v) => {
+        println(v)
+        0
+      }
       case Addition(a, b) => eval(a) + eval(b)
       case Substraction(a, b) => eval(a) - eval(b)
       case Multiplication(a, b) => eval(a) * eval(b)
