@@ -11,10 +11,11 @@ object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
 
-    val result = new ParsingRules("22/7")
+    val result = new ParsingRules("+ 2 4")
     result.InputLine.run() match {
       case Success(tree) =>
-        println("Result: " + result.eval(tree) + "\nTree: " + tree)
+        println("Tree: " + tree)
+        //println("Result: " + result.eval(tree) + "\nTree: " + tree)
         //val test = new ByteCodeGenerator("test", tree)
         //test.writer
       case Failure(e: ParseError) => println("Expression is not valid")

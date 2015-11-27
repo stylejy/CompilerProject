@@ -11,25 +11,26 @@ class ParsingRules(val input: ParserInput) extends Parser {
   def InputLine = rule { Expression ~ EOI}
 
   def Expression: Rule1[Expr] = rule {
-    Term
+    zeroOrMore(' ') ~ Term ~ zeroOrMore(' ')
   }
 
-  def Term = rule {
+  def Term: Rule1[Expr] = rule {
     Factor
   }
 
-  def Factor = rule { Number | String | Parens | SimpleArithmetic }
+  def Factor = rule { Number | String | Parens | Arithmetic }
 
   def String = rule { "\"" ~ Characters ~ "\"" }
 
   def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> Value }
 
-  def Parens = rule { '(' ~ Expression ~ ')' }
+  def Parens = rule { '(' ~ Term ~ ')' }
 
   def Number = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit) ~ ( "." | "/" | "") ~ zeroOrMore(CharPredicate.Digit) ) ~> Value }
 
-  def SimpleArithmetic = rule { '+' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Addition | '-' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Substraction | '*' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Multiplication | '/' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Division | '%' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Remainder }
+  def Arithmetic = rule { '+' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Addition | '-' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Substraction | '*' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Multiplication | '/' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Division | '%' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Remainder }
 
+  /*
   //For testing
   def eval(expr: Expr): Int =
     expr match {
@@ -50,5 +51,6 @@ class ParsingRules(val input: ParserInput) extends Parser {
       case Division(a, b) => eval(a) / eval(b)
       case Remainder(a, b) => eval(a) % eval(b)
     }
+    */
 }
 
