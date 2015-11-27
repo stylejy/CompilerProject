@@ -15,8 +15,8 @@ object test {
     result.InputLine.run() match {
       case Success(tree) =>
         println("Result: " + result.eval(tree) + "\nTree: " + tree)
-        val test = new ByteCodeGenerator("test", tree)
-        test.writer
+        //val test = new ByteCodeGenerator("test", tree)
+        //test.writer
       case Failure(e: ParseError) => println("Expression is not valid")
       case Failure(e) => println("Unexpected error")
     }

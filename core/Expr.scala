@@ -3,7 +3,6 @@
   */
 sealed trait Expr
   case class Value(value: String) extends Expr
-  case class ValueString(value: String) extends Expr
   case class Addition(firstValue: Expr, secondValue: Expr) extends Expr
   case class Substraction(firstValue: Expr, secondValue: Expr) extends Expr
   case class Multiplication(firstValue: Expr, secondValue: Expr) extends Expr

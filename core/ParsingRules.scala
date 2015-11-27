@@ -22,7 +22,7 @@ class ParsingRules(val input: ParserInput) extends Parser {
 
   def String = rule { "\"" ~ Characters ~ "\"" }
 
-  def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> ValueString }
+  def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> Value }
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
@@ -33,10 +33,16 @@ class ParsingRules(val input: ParserInput) extends Parser {
   //For testing
   def eval(expr: Expr): Int =
     expr match {
-      case Value(v) => v.toInt
-      case ValueString(v) => {
-        println(v)
-        0
+      case Value(v) => {
+        try {
+          v.toInt
+        } catch {
+          case e: NumberFormatException => {
+            println(v)
+            return 0
+          }
+        }
+        v.toInt
       }
       case Addition(a, b) => eval(a) + eval(b)
       case Substraction(a, b) => eval(a) - eval(b)
