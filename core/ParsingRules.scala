@@ -26,7 +26,7 @@ class ParsingRules(val input: ParserInput) extends Parser {
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
-  def Number = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit)) ~> Value }
+  def Number = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit) ~ ( "." | "") ~ zeroOrMore(CharPredicate.Digit) ) ~> Value }
 
   def SimpleArithmetic = rule { '+' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Addition | '-' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Substraction | '*' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Multiplication | '/' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Division | '%' ~ (' ' ~ (Expression ~ ' ' ~ Expression)) ~> Remainder }
 
