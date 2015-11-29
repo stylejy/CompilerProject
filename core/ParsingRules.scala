@@ -18,17 +18,21 @@ class ParsingRules(val input: ParserInput) extends Parser {
     Factor
   }
 
-  def Factor = rule { Number | String | Parens | Arithmetic }
+  def Factor = rule { Number | String | Parens | Arithmetic | Symbols | Characters | Definition }
 
   def String = rule { "\"" ~ Characters ~ "\"" }
 
-  def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> Value }
+  def Characters = rule { zeroOrMore(' ') ~ capture(zeroOrMore(CharPredicate.AlphaNum)) ~ zeroOrMore(' ') ~> Value }
 
-  def Parens = rule { '(' ~ Term ~ ')' }
+  def Parens = rule { '(' ~ Expression ~ ')' }
 
-  def Number = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit) ~ ( "." | "/" | "") ~ zeroOrMore(CharPredicate.Digit) ) ~> Value }
+  def Number = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit) ~ ( "." | "/" | "") ~ zeroOrMore(CharPredicate.Digit)) ~> Value }
 
   def Arithmetic = rule { '+' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Addition | '-' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Substraction | '*' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Multiplication | '/' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Division | '%' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Remainder }
+
+  def Symbols = rule { Definition ~ Characters ~ Expression ~> Symbol }
+
+  def Definition = rule { capture(( "defn" | "def")) ~> Value }
 
   /*
   //For testing

@@ -11,7 +11,7 @@ object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
 
-    val result = new ParsingRules("+ 2 4")
+    val result = new ParsingRules("defn a (+ 2 5)")
     result.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
