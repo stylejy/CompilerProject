@@ -11,7 +11,11 @@ object test {
   def main(args: Array[String]) {
     //Evaluate the argument of Calculator
 
-    val result = new ParsingRules("defn a (+ 2 5)")
+    /* fibonacci in Clojure
+    //(defn fib [x] (if (or (= x 0) (= x 1)) x (+ (fib (- x 2)) (fib (- x 1)))))
+    */
+
+    val result = new TGParser("(defn fib [x] ([x]))")
     result.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
