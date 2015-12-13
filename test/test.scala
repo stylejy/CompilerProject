@@ -16,7 +16,7 @@ object test {
     */
 
     val result = new TGParser("(defn fib [x] (if (or (= x 0) (= x 1)) x (+ (fib x) (fib y))))")
-    val treeGen = new TreeGenerator
+    val treeGen = new TreeEvaluator
     result.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
