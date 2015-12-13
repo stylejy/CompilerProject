@@ -1,6 +1,7 @@
 
 import org.parboiled2._
 
+import scala.collection.immutable
 /**
   * Created by stylejy on 09/11/2015.
   * Thanks GOD for all.
@@ -50,29 +51,5 @@ class TGParser(val input: ParserInput) extends Parser {
 
   def Sets = rule { "#{" ~ oneOrMore(Characters).separatedBy(' ') ~ '}' ~> Set }
   */
-
-
-  /*
-  //For testing
-  def eval(expr: Expr): Int =
-    expr match {
-      case Value(v) => {
-        try {
-          v.toInt
-        } catch {
-          case e: NumberFormatException => {
-            println(v)
-            return 0
-          }
-        }
-        v.toInt
-      }
-      case Addition(a, b) => eval(a) + eval(b)
-      case Substraction(a, b) => eval(a) - eval(b)
-      case Multiplication(a, b) => eval(a) * eval(b)
-      case Division(a, b) => eval(a) / eval(b)
-      case Remainder(a, b) => eval(a) % eval(b)
-    }
-    */
 }
 
