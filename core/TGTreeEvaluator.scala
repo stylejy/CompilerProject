@@ -3,7 +3,7 @@ import scala.collection.immutable
 /**
   * Created by stylejy on 13/12/2015.
   */
-class TreeEvaluator {
+class TGTreeEvaluator {
   //For testing
   def eval(expr: Expr): Unit =
     expr match {

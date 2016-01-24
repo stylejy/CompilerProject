@@ -6,7 +6,7 @@ import scala.collection.mutable.ListBuffer
   * Created by stylejy on 18/11/2015.
   * Thanks GOD for all.
   */
-class ByteCodeGenerator(classname: String, ast: Expr) {
+class TGByteCodeGenerator(classname: String, ast: Expr) {
 
   val pw = new PrintWriter(new File(classname+".tg"))
 
