@@ -6,14 +6,16 @@ import scala.collection.immutable
 class TGTreeEvaluator {
   val keywordList = new TGKeywordList
 
-  def eval(expr: Expr): Unit = {
+  def eval(expr: Expr): Any = {
     expr match {
+      case Value(a) => a
+      case Keyword(a) => a
       case Vector(a) => deriveVector(a)
       case Argument(a) => deriveVector(a)
       case Function(a, b) => {
-        val keyword = deriveValue(a)
+        val keyword = eval(a).toString
         if(keywordList.keywordList(keyword)){
-          println("found")
+
         } else {
           println("no")
         }
@@ -23,11 +25,6 @@ class TGTreeEvaluator {
         eval(b)
       }
     }
-  }
-
-  def deriveValue(expr: Expr): String = expr match {
-    case Value(a) => return a
-    case Keyword(a) => return a
   }
 
   def deriveVector(inputVector: immutable.Seq[Expr]): Unit = {
