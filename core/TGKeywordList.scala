@@ -1,11 +1,12 @@
 import instruction._
+import sun.font.TrueTypeFont
 import scala.collection.mutable.Map
 /**
   * Created by stylejy on 25/01/2016.
   */
 class TGKeywordList {
-  val keyworkdList = Map[String, Object]()
+  val keywordList = Map[String, Boolean]()
 
-  keyworkdList += ("defn" -> TGdefn)
-  keyworkdList += ("if" -> TGif)
+  keywordList += ("defn" -> true)
+  keywordList += ("if" -> true)
 }
