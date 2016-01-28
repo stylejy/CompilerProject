@@ -1,5 +1,3 @@
-import instruction._
-import sun.font.TrueTypeFont
 import scala.collection.mutable.Map
 /**
   * Created by stylejy on 25/01/2016.
@@ -9,4 +7,8 @@ class TGKeywordList {
 
   keywordList += ("defn" -> true)
   keywordList += ("if" -> true)
+  keywordList += ("or" -> true)
+  keywordList += ("=" -> true)
+  keywordList += ("+" -> true)
+  keywordList += ("-" -> true)
 }
