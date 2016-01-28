@@ -25,9 +25,7 @@ class TGTreeEvaluator {
     if(keywordList.keywordList(keyword)){
       println(" Keyword " + keyword +"\'s argument: " + secondInput)
       keyword match {
-        case "defn" => {
-          defn(secondInput)
-        }
+        case "defn" => defn(secondInput)
       }
     } else {
       println("Keyword doesn't match")
@@ -43,7 +41,7 @@ class TGTreeEvaluator {
 
   def deriveValueFromVector(inputVector: immutable.Seq[Expr]): String = {
     var value = ""
-    var count = 0;
+    var count = 0
     for (i <- inputVector) {
       value = evalExpression(inputVector(count)).toString
       count = count + 1
@@ -63,11 +61,11 @@ class TGTreeEvaluator {
             userFunctionList.keywordList(functionName.toString)
           } catch {
             case ex: NoSuchElementException =>
-              userFunctionList.keywordList += (functionName.toString -> true)
+              userFunctionList.keywordList += (functionName.toString -> new InformationStructure(group(1), group(2)))
           }
 
-          println("   The function's parameter: " + evalExpression(group(1)))
-          println("   The function's body: " + group(2))
+          println("   " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
+          println("   " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
         }
         else {
           println("error: wrong structure")
