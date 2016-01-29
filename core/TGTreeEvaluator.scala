@@ -6,6 +6,13 @@ import scala.collection.immutable
 //dependentDepth: Integer number shows depth from the root.
 class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStructure) {
   val keywordList = new TGKeywordList
+  val indent = {
+    var space = ""
+    for (i <- 0 to info.depth) {
+      space += "   "
+    }
+    space
+  }
 
   def run: Unit = {
     evalExpression(info.body)
@@ -28,7 +35,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
   def evalFunction(firstInput: Expr, secondInput: Argument): Unit = {
     val keyword = evalExpression(firstInput).toString
     if(keywordList.keywordList(keyword)){
-      println(" Keyword " + keyword +"\'s argument: " + secondInput)
+      println(indent + "Keyword " + keyword +"\'s argument: " + secondInput)
       keyword match {
         case "defn" => functionDefn(secondInput)
         case "if" => functionIf(secondInput)
@@ -58,7 +65,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
         if(group.size == 3) {
           val userFunctionList = new TGUserFunctionList
 
-          println("   User declared function name: " + evalExpression(group(0)))
+          println(indent + " User declared function name: " + evalExpression(group(0)))
           val functionName = evalExpression(group(0))
           try {
             userFunctionList.keywordList(functionName.toString)
@@ -67,8 +74,8 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
               userFunctionList.keywordList += (functionName.toString -> new InformationStructure(functionName.toString, group(1), group(2), info.depth+1))
           }
 
-          println("   " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
-          println("   " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
+          println(indent + " " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
+          println(indent + " " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
           userFunctionList.evalBody(functionName.toString)
         }
         else {

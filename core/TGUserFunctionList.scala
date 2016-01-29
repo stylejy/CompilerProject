@@ -6,6 +6,6 @@ class TGUserFunctionList {
   val keywordList = Map[String, InformationStructure]()
 
   def evalBody(inputName: String): Unit = {
-    val eval = new TGTreeEvaluator(this, keywordList(inputName))
+    new TGTreeEvaluator(this, keywordList(inputName)).run
   }
 }
