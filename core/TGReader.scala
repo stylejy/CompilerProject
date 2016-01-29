@@ -14,7 +14,7 @@ class TGReader {
   println(line)
 
   val code = new TGParser(line)
-  val treeGen = new TGTreeEvaluator
+  val treeGen = new TGTreeEvaluator(new TGUserFunctionList, 0)
   code.InputLine.run() match {
     case Success(tree) =>
       println("Tree: " + tree)

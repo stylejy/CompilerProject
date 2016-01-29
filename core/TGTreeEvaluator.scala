@@ -3,7 +3,8 @@ import scala.collection.immutable
 /**
   * Created by stylejy on 13/12/2015.
   */
-class TGTreeEvaluator {
+//dependentDepth: Integer number shows depth from the root.
+class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int) {
   val keywordList = new TGKeywordList
 
   def evalExpression(expr: Expr): Any = {
@@ -25,7 +26,12 @@ class TGTreeEvaluator {
     if(keywordList.keywordList(keyword)){
       println(" Keyword " + keyword +"\'s argument: " + secondInput)
       keyword match {
-        case "defn" => defn(secondInput)
+        case "defn" => functionDefn(secondInput)
+        case "if" => functionIf(secondInput)
+        case "or" => functionOr(secondInput)
+        case "=" => functionEqual(secondInput)
+        case "+" => functionPlus(secondInput)
+        case "-" => functionMinus(secondInput)
       }
     } else {
       println("Keyword doesn't match")
@@ -49,7 +55,7 @@ class TGTreeEvaluator {
     return value
   }
 
-  def defn(inputArguments: Argument): Unit = {
+  def functionDefn(inputArguments: Argument): Unit = {
     inputArguments match {
       case Argument(group) => {
         if(group.size == 3) {
@@ -66,11 +72,32 @@ class TGTreeEvaluator {
 
           println("   " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
           println("   " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
+
         }
         else {
           println("error: wrong structure")
         }
       }
     }
+  }
+
+  def functionIf(inputArguments: Argument): Unit = {
+    evalExpression(inputArguments)
+  }
+
+  def functionOr(inputArguments: Argument): Unit = {
+    evalExpression(inputArguments)
+  }
+
+  def functionEqual(inputArguments: Argument): Unit = {
+    evalExpression(inputArguments)
+  }
+
+  def functionPlus(inputArguments: Argument): Unit = {
+    evalExpression(inputArguments)
+  }
+
+  def functionMinus(inputArguments: Argument): Unit ={
+    evalExpression(inputArguments)
   }
 }
