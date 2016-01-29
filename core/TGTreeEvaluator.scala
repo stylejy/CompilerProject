@@ -61,7 +61,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int)
             userFunctionList.keywordList(functionName.toString)
           } catch {
             case ex: NoSuchElementException =>
-              userFunctionList.keywordList += (functionName.toString -> new InformationStructure(group(1), group(2)))
+              userFunctionList.keywordList += (functionName.toString -> new InformationStructure(functionName.toString, group(1), group(2), dependentDepth+1))
           }
 
           println("   " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
