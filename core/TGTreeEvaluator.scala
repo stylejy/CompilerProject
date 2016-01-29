@@ -52,8 +52,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int)
     inputArguments match {
       case Argument(group) => {
         if(group.size == 3) {
-          //externally declared userFunctionList is used for scalability
-          val userFunctionList = dependentPointer
+          val userFunctionList = new TGUserFunctionList
 
           println("   User declared function name: " + evalExpression(group(0)))
           val functionName = evalExpression(group(0))
