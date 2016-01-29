@@ -14,14 +14,13 @@ class TGReader {
   println(line)
 
   val code = new TGParser(line)
-  val treeGen = new TGTreeEvaluator(new TGUserFunctionList, 0)
   code.InputLine.run() match {
     case Success(tree) =>
       println("Tree: " + tree)
       //println("Result: " + result.eval(tree) + "\nTree: " + tree)
       //val test = new ByteCodeGenerator("test", tree)
       //test.writer
-      treeGen.evalExpression(tree)
+      new TGTreeEvaluator(new TGUserFunctionList, new InformationStructure("root", Empty(0), tree, 0)).run
     case Failure(e: ParseError) => println("Expression is not valid")
     case Failure(e) => println("Unexpected error")
   }

@@ -4,6 +4,7 @@ import scala.collection.immutable
   * Created by stylejy on 19/11/2015.
   */
 sealed trait Expr
+  case class Empty(value: Int) extends Expr
   case class Value(value: String) extends Expr
   case class Keyword(value: String) extends Expr
 

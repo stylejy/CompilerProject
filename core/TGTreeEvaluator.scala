@@ -4,8 +4,12 @@ import scala.collection.immutable
   * Created by stylejy on 13/12/2015.
   */
 //dependentDepth: Integer number shows depth from the root.
-class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int) {
+class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStructure) {
   val keywordList = new TGKeywordList
+
+  def run: Unit = {
+    evalExpression(info.body)
+  }
 
   def evalExpression(expr: Expr): Any = {
     expr match {
@@ -60,12 +64,12 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int)
             userFunctionList.keywordList(functionName.toString)
           } catch {
             case ex: NoSuchElementException =>
-              userFunctionList.keywordList += (functionName.toString -> new InformationStructure(functionName.toString, group(1), group(2), dependentDepth+1))
+              userFunctionList.keywordList += (functionName.toString -> new InformationStructure(functionName.toString, group(1), group(2), info.depth+1))
           }
 
           println("   " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
           println("   " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
-
+          userFunctionList.evalBody(functionName.toString)
         }
         else {
           println("error: wrong structure")
