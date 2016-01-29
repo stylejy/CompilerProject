@@ -5,5 +5,4 @@ import scala.collection.mutable.Map
 class TGUserFunctionList {
   val keywordList = Map[String, InformationStructure]()
 
-
 }

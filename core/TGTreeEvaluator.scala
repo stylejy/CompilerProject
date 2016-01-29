@@ -38,13 +38,6 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int)
     }
   }
 
-
-  /*def unGroupFromArgument(inputGroup: Any, returnNumber: Int): Unit = {
-    val group: immutable.Seq[Expr] = inputGroup
-    return group(returnNumber-1)
-  }*/
-
-
   def deriveValueFromVector(inputVector: immutable.Seq[Expr]): String = {
     var value = ""
     var count = 0
@@ -59,7 +52,8 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, dependentDepth: Int)
     inputArguments match {
       case Argument(group) => {
         if(group.size == 3) {
-          val userFunctionList = new TGUserFunctionList
+          //externally declared userFunctionList is used for scalability
+          val userFunctionList = dependentPointer
 
           println("   User declared function name: " + evalExpression(group(0)))
           val functionName = evalExpression(group(0))
