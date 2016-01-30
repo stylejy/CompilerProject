@@ -14,7 +14,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
     space
   }
 
-  def run: Unit = {
+  def run(): Unit = {
     evalExpression(info.body)
   }
 
@@ -25,17 +25,20 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
       case Vector(a) => deriveValueFromVector(a)
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => evalFunction(a, b)
-      case UserFunction(a, b) => {
-        evalExpression(a)
-        evalExpression(b)
-      }
+      case UserFunction(a, b) => evalUserFunction(a, b)
+
     }
+  }
+
+  def evalUserFunction(firstInput: Expr, secondInput: Argument): Unit ={
+    println(indent + "[CALL] User function: " + firstInput)
+    evalExpression(secondInput)
   }
 
   def evalFunction(firstInput: Expr, secondInput: Argument): Unit = {
     val keyword = evalExpression(firstInput).toString
     if(keywordList.keywordList(keyword)){
-      println(indent + "Keyword " + keyword +"\'s argument: " + secondInput)
+      println(indent + info.name + "--> Keyword " + keyword +"\'s argument: " + secondInput)
       keyword match {
         case "defn" => functionDefn(secondInput)
         case "if" => functionIf(secondInput)
@@ -65,7 +68,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
         if(group.size == 3) {
           val userFunctionList = new TGUserFunctionList
 
-          println(indent + " User declared function name: " + evalExpression(group(0)))
+          println(indent + " User declared function name: " + group(0))
           val functionName = evalExpression(group(0))
           try {
             userFunctionList.keywordList(functionName.toString)
@@ -74,7 +77,7 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
               userFunctionList.keywordList += (functionName.toString -> new InformationStructure(functionName.toString, group(1), group(2), info.depth+1))
           }
 
-          println(indent + " " + functionName.toString + "'s parameter: " + evalExpression(userFunctionList.keywordList(functionName.toString).parameter))
+          println(indent + " " + functionName.toString + "'s parameter: " + userFunctionList.keywordList(functionName.toString).parameter)
           println(indent + " " + functionName.toString + "'s body: " + userFunctionList.keywordList(functionName.toString).body)
           userFunctionList.evalBody(functionName.toString)
         }
@@ -86,22 +89,85 @@ class TGTreeEvaluator(dependentPointer: TGUserFunctionList, info: InformationStr
   }
 
   def functionIf(inputArguments: Argument): Unit = {
-    evalExpression(inputArguments)
+    inputArguments match {
+      case Argument(group) => {
+        if(group.size == 3) {
+          val userFunctionList = new TGUserFunctionList
+
+          println(indent + " if's conditional statement: " + group(0))
+          userFunctionList.keywordList += ("ifCondition" -> new InformationStructure("ifCondition", Empty(0), group(0), info.depth+1))
+          userFunctionList.evalBody("ifCondition")
+
+          println(indent + " if's true statement: " + group(1))
+          userFunctionList.keywordList += ("ifTrue" -> new InformationStructure("ifTrue", Empty(0), group(1), info.depth+1))
+          userFunctionList.evalBody("ifTrue")
+
+          println(indent + " if's false statement: " + group(2))
+          userFunctionList.keywordList += ("ifFalse" -> new InformationStructure("ifFalse", Empty(0), group(2), info.depth+1))
+          userFunctionList.evalBody("ifFalse")
+        }
+      }
+    }
   }
 
   def functionOr(inputArguments: Argument): Unit = {
-    evalExpression(inputArguments)
+    inputArguments match {
+      case Argument(group) => {
+        val userFunctionList = new TGUserFunctionList
+
+        for (i <- 0 until group.size) {
+          println(indent + " or's condition(" + i + "): " + group(i))
+          userFunctionList.keywordList += ("or"+i -> new InformationStructure("or"+i, Empty(0), group(i), info.depth+1))
+          userFunctionList.evalBody("or"+i)
+        }
+      }
+    }
   }
 
   def functionEqual(inputArguments: Argument): Unit = {
-    evalExpression(inputArguments)
+    inputArguments match {
+      case Argument(group) => {
+        if(group.size == 2) {
+          val userFunctionList = new TGUserFunctionList
+
+          println(indent + " ='s first element: " + group(0))
+          userFunctionList.keywordList += ("equal1" -> new InformationStructure("equal1", Empty(0), group(0), info.depth+1))
+          userFunctionList.evalBody("equal1")
+
+          println(indent + " ='s second element: " + group(1))
+          userFunctionList.keywordList += ("equal2" -> new InformationStructure("equal2", Empty(0), group(1), info.depth+1))
+          userFunctionList.evalBody("equal2")
+
+        }
+      }
+    }
   }
 
   def functionPlus(inputArguments: Argument): Unit = {
-    evalExpression(inputArguments)
+    inputArguments match {
+      case Argument(group) => {
+        val userFunctionList = new TGUserFunctionList
+
+        for (i <- 0 until group.size) {
+          println(indent + " +'s element(" + i + "): " + group(i))
+          userFunctionList.keywordList += ("plus"+i -> new InformationStructure("plus"+i, Empty(0), group(i), info.depth+1))
+          userFunctionList.evalBody("plus"+i)
+        }
+      }
+    }
   }
 
-  def functionMinus(inputArguments: Argument): Unit ={
-    evalExpression(inputArguments)
+  def functionMinus(inputArguments: Argument): Unit = {
+    inputArguments match {
+      case Argument(group) => {
+        val userFunctionList = new TGUserFunctionList
+
+        for (i <- 0 until group.size) {
+          println(indent + " -'s element(" + i + "): " + group(i))
+          userFunctionList.keywordList += ("minus"+i -> new InformationStructure("minus"+i, Empty(0), group(i), info.depth+1))
+          userFunctionList.evalBody("minus"+i)
+        }
+      }
+    }
   }
 }

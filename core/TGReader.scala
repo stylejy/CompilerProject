@@ -20,7 +20,7 @@ class TGReader {
       //println("Result: " + result.eval(tree) + "\nTree: " + tree)
       //val test = new ByteCodeGenerator("test", tree)
       //test.writer
-      new TGTreeEvaluator(new TGUserFunctionList, new InformationStructure("root", Empty(0), tree, 0)).run
+      new TGTreeEvaluator(new TGUserFunctionList, new InformationStructure("ROOT", Empty(0), tree, 0)).run
     case Failure(e: ParseError) => println("Expression is not valid")
     case Failure(e) => println("Unexpected error")
   }
