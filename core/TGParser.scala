@@ -19,17 +19,17 @@ class TGParser(val input: ParserInput) extends Parser {
     Factor
   }
 
-  def Factor = rule { Parens | Vectors | Functions | Userfunctions | String | Characters | Numbers }
+  def Factor = rule { Parens | Vectors | Functions | Userfunctions | Strings | IntNumbers | Characters }
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
   def Arguments = rule { oneOrMore(Term).separatedBy(' ') ~> Argument }
 
-  def String = rule { "\"" ~ Characters ~ "\"" }
+  def Strings = rule { "\"" ~ Characters ~ "\"" ~> Sentence }
 
   def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> Value }
 
-  def Numbers = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit) ~ ( "." | "/" | "") ~ zeroOrMore(CharPredicate.Digit)) ~> Value }
+  def IntNumbers = rule { capture(( "+" | "-" | "" ) ~ oneOrMore(CharPredicate.Digit)) ~> IntNumber }
 
   def Functions = rule { Keywords ~ ' ' ~ Arguments ~> Function }
 

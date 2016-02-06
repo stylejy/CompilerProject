@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
   * Thanks GOD for all.
   */
 class TGByteCodeGenerator(classname: String, ast: Expr) {
-
+/*
   val pw = new PrintWriter(new File(classname+".tg"))
 
   def astManager(expr: Expr): Unit =
@@ -57,4 +57,5 @@ class TGByteCodeGenerator(classname: String, ast: Expr) {
 
     pw.close()
   }
+  */
 }
