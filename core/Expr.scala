@@ -9,6 +9,7 @@ sealed trait Expr
   case class Sentence(value: Expr) extends Expr
   case class Value(value: String) extends Expr
   case class Keyword(value: String) extends Expr
+  case class Bool(value: String) extends Expr
 
   case class Function(firstValue: Expr, secondValue: Argument) extends Expr
   case class UserFunction(firstValue: Expr, secondValue: Argument) extends Expr

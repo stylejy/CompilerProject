@@ -17,9 +17,10 @@ class TGTreeEvaluator {
 
   def evalExpression(expr: Expr, vTable: TGSymbolTable, fTable: TGSymbolTable): Any = {
     expr match {
-      case Value(a) => a
+      case Value(a) => evalExpression(vTable.list(a), vTable, fTable)
       case Keyword(a) => a
       case IntNumber(a) => a.toInt
+      case Bool(a) => a.toBoolean
       case Sentence(a) => a match {
         case Value(a) => a
       }
@@ -33,10 +34,28 @@ class TGTreeEvaluator {
 
   def evalUserFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGSymbolTable, inputFTable: TGSymbolTable): Any ={
     println(indent + "[CALL] User function: " + firstInput)
-    //inputVTable.
+    val arg = secondInput match {
+      case Argument(a) => a(0) match {
+        case Function(a, b) =>
+          IntNumber(evalFunction(a, b, inputVTable, inputFTable).toString)
+        case _ => a(0)
+      }
+    }
+
+    //(+ (fib (- x 2)) (fib (- x 1))) x should be same, but if both fibs are shared vTable,
+    //the first fib changes parameter value and the changed one will be used for the second fib.
+    val newVTable = new TGSymbolTable()
+    for(i <- inputVTable.list) {
+      newVTable.list += i
+    }
+    newVTable.list.update("x",arg)
+    val name = firstInput match {
+      case Value(a) => a.toString
+    }
+    evalExpression(inputFTable.list(name), newVTable, inputFTable)
   }
 
-  def evalFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGSymbolTable, inputFTable: TGSymbolTable ): Unit = {
+  def evalFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGSymbolTable, inputFTable: TGSymbolTable ): Any = {
     val keyword = evalExpression(firstInput, inputVTable, inputFTable).toString
     if(keywordList.keywordList(keyword)){
       //println(indent + info.name + "--> Keyword " + keyword +"\'s argument: " + secondInput)
@@ -106,39 +125,51 @@ class TGTreeEvaluator {
   def functionIf(inputArguments: Argument, inputVTable: TGSymbolTable, inputFTable: TGSymbolTable): Any = {
     inputArguments match {
       case Argument(group) => {
-        if(group.size == 3) {
+        if (group.size == 3) {
           println(indent + " if's conditional statement: " + group(0))
           println(indent + " if's true statement: " + group(1))
           println(indent + " if's false statement: " + group(2))
 
-          if(group(0).equals(false))
-            group(2)
+          if (evalExpression(group(0), inputVTable, inputFTable).toString.toBoolean)
+            evalExpression(group(1), inputVTable, inputFTable)
           else
-            group(1)
+            evalExpression(group(2), inputVTable, inputFTable)
         }
       }
     }
   }
 
   def functionOr(inputArguments: Argument, inputVTable: TGSymbolTable, inputFTable: TGSymbolTable): Boolean = {
-    var result = false
+    val result = false
     inputArguments match {
       case Argument(group) => {
         for (i <- 0 until group.size) {
           println(indent + " or's condition(" + i + "): " + group(i))
           group(i) match {
             case Value(a) =>
-              if(a.equals("true")) {
-                println (true)
+              if(inputVTable.list(a).equals("true")) {
+                //println(true)
                 return true
               }
-            case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
+            case IntNumber(a) =>
+              //println(true)
+              return true
+            case Bool(a) =>
+              if(a.toBoolean) {
+                //println(true)
+                return true
+              }
+            case Function(a, b) =>
+              if(evalFunction(a, b, inputVTable, inputFTable).equals(true)) {
+                //println(true)
+                return true
+              }
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
         }
       }
     }
-    println(result)
+    //println(result)
     result
   }
 
@@ -150,12 +181,16 @@ class TGTreeEvaluator {
           println(indent + " ='s first element: " + group(0))
           println(indent + " ='s second element: " + group(1))
           val value1 = group(0) match {
-            case Value(a) => a
+            case Value(a) => evalExpression(inputVTable.list(a), inputVTable, inputFTable)
+            case IntNumber(a) => a.toInt
+            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
           val value2 = group(1) match {
-            case Value(a) => a
+            case Value(a) => evalExpression(inputVTable.list(a), inputVTable, inputFTable)
+            case IntNumber(a) => a.toInt
+            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
@@ -163,7 +198,7 @@ class TGTreeEvaluator {
         }
       }
     }
-    println(result)
+    //println(result)
     result
   }
 
@@ -180,13 +215,15 @@ class TGTreeEvaluator {
               }
               result += number
             case IntNumber(a) => result += a.toInt
-            case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
-            case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
+            case Function(a, b) =>
+              result += evalFunction(a, b, inputVTable, inputFTable).toString.toInt
+            case UserFunction(a, b) =>
+              result += evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
           }
         }
       }
     }
-    println(result)
+    //println(result)
     result
   }
 
@@ -220,7 +257,7 @@ class TGTreeEvaluator {
         }
       }
     }
-    println(result)
+    //println(result)
     result
   }
 }
