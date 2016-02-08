@@ -7,8 +7,8 @@ import scala.util.{Failure, Success}
   * Created by stylejy on 24/01/2016.
   */
 class TGReader {
-  val vTable = new TGSymbolTable
-  val fTable = new TGSymbolTable
+  val vTable = new TGVariableSymbolTable
+  val fTable = new TGFunctionSymbolTable
 
   val source = Source.fromFile("test.tg")
   for(line <- source.getLines()) {

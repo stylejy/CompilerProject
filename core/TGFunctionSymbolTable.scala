@@ -1,10 +1,12 @@
 import scala.collection.mutable.Map
+
 /**
   * Created by stylejy on 27/01/2016.
   */
-class TGSymbolTable {
-  val list = Map[String, Expr]()
-  var oldSymbolTable = this
+class TGFunctionSymbolTable {
+  //First tuple is for args list and second one is for the body
+  val list = Map[String, (Expr, Expr)]()
+  /*var oldSymbolTable = this
 
   def evalBody(inputName: String): Unit = {
     //new TGTreeEvaluator(this, keywordList(inputName)).run
@@ -22,5 +24,5 @@ class TGSymbolTable {
 
   def exitCurrentScope: TGSymbolTable ={
     oldSymbolTable
-  }
+  }*/
 }
