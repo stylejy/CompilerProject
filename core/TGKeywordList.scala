@@ -11,4 +11,5 @@ class TGKeywordList {
   keywordList += ("=" -> true)
   keywordList += ("+" -> true)
   keywordList += ("-" -> true)
+  keywordList += ("*" -> true)
 }

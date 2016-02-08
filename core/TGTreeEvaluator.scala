@@ -92,6 +92,7 @@ class TGTreeEvaluator {
         case "=" => functionEqual(secondInput, inputVTable, inputFTable)
         case "+" => functionPlus(secondInput, inputVTable, inputFTable)
         case "-" => functionMinus(secondInput, inputVTable, inputFTable)
+        case "*" => functionMultiply(secondInput, inputVTable, inputFTable)
       }
     } else {
       println("Keyword doesn't match")
@@ -276,8 +277,62 @@ class TGTreeEvaluator {
               } else {
                 result -= a.toInt
               }
-            case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
-            case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
+            case Function(a, b) =>
+              if(i == 0) {
+                result = evalFunction(a, b, inputVTable, inputFTable).toString.toInt
+              } else {
+                result -= evalFunction(a, b, inputVTable, inputFTable).toString.toInt
+              }
+            case UserFunction(a, b) =>
+              if(i == 0) {
+                result = evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
+              } else {
+                result -= evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
+              }
+          }
+        }
+      }
+    }
+    //println(result)
+    result
+  }
+
+  def functionMultiply(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Int = {
+    var result = 0
+    inputArguments match {
+      case Argument(group) => {
+        for (i <- 0 until group.size) {
+          //println(indent + " -'s element(" + i + "): " + group(i))
+          group(i) match {
+            case Value(a) =>
+              if(i == 0) {
+                result = inputVTable.list(a) match {
+                  case IntNumber(a) => a.toInt
+                }
+              } else {
+                val number = inputVTable.list(a) match {
+                  case IntNumber(a) => a.toInt
+                }
+                result = result * number
+              }
+            case IntNumber(a) =>
+              if(i == 0) {
+                result = a.toInt
+              } else {
+                result = result * a.toInt
+              }
+            case Function(a, b) =>
+              if(i == 0) {
+                result = evalFunction(a, b, inputVTable, inputFTable).toString.toInt
+              } else {
+                result = result * evalFunction(a, b, inputVTable, inputFTable).toString.toInt
+              }
+            case UserFunction(a, b) =>
+              if(i == 0) {
+                result = evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
+              } else {
+                result = result * evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
+              }
           }
         }
       }
