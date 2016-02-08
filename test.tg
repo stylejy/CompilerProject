@@ -1,2 +1,2 @@
 (defn fib [x] (if (or (= x 0) (= x 1)) x (+ (fib (- x 2)) (fib (- x 1)))))
-(fib 10)
+(fib 8)
