@@ -33,7 +33,7 @@ class TGParser(val input: ParserInput) extends Parser {
 
   def Functions = rule { Keywords ~ ' ' ~ Arguments ~> Function }
 
-    def Keywords = rule { capture( "defn" | "def" | "if" | "and" | "or" | '=' | '+' | '-' | '*' ) ~> Keyword }
+    def Keywords = rule { capture( "defn" | "def" | "if" | "and" | "or" | '=' | '+' | '-' | '*'| "rem" ) ~> Keyword }
 
   def Vectors = rule { '[' ~ oneOrMore(Characters).separatedBy(' ') ~ ']' ~> Vector }
 

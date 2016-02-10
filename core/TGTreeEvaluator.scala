@@ -35,21 +35,26 @@ class TGTreeEvaluator {
   def evalUserFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any ={
     //println(indent + "[CALL] User function: " + firstInput)
     val initialArg = secondInput match {
-      case Argument(a) => a
+      case Argument(a) =>
+        a
     }
-
     val arg = new Array[Expr](initialArg.size)
     for (i <- 0 until initialArg.size) {
       if(initialArg(i) match {
         case Function(a, b) => true
+        case UserFunction(a, b) => true
+        case Value(a) => true
         case _ => false
       }) {
         arg(i) = initialArg(i) match {
+          case Value(a) => IntNumber(evalExpression(inputVTable.list(a), inputVTable, inputFTable).toString)
           case Function(a, b) => IntNumber(evalFunction(a, b, inputVTable, inputFTable).toString)
+          case UserFunction(a, b) => IntNumber(evalUserFunction(a, b, inputVTable, inputFTable).toString)
         }
       } else {
         arg(i) = initialArg(i)
       }
+      //println(initialArg(i) + "---->" + arg(i))
     }
 
     //(+ (fib (- x 2)) (fib (- x 1))) x should be same, but if both fibs are shared vTable,
@@ -74,6 +79,7 @@ class TGTreeEvaluator {
           case Value(a) => a.toString
         }
         newVTable.list.update(varName, arg(counter))
+        //println(varName + " links to " + arg(counter))
         counter += 1
       }
     }
@@ -93,6 +99,7 @@ class TGTreeEvaluator {
         case "+" => functionPlus(secondInput, inputVTable, inputFTable)
         case "-" => functionMinus(secondInput, inputVTable, inputFTable)
         case "*" => functionMultiply(secondInput, inputVTable, inputFTable)
+        case "rem" => functionRemainder(secondInput, inputVTable, inputFTable)
       }
     } else {
       println("Keyword doesn't match")
@@ -334,6 +341,43 @@ class TGTreeEvaluator {
                 result = result * evalUserFunction(a, b, inputVTable, inputFTable).toString.toInt
               }
           }
+        }
+      }
+    }
+    //println(result)
+    result
+  }
+
+  def functionRemainder(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Int = {
+    var result = 0
+    inputArguments match {
+      case Argument(group) => {
+        if(group.size == 2) {
+          //println(indent + " ='s first element: " + group(0))
+          //println(indent + " ='s second element: " + group(1))
+          val value1 = group(0) match {
+            case Value(a) =>
+              //println("a: "+a)
+              //println("table: " +inputVTable.list(a))
+              inputVTable.list(a) match {
+              case IntNumber(a) => a.toInt
+            }
+            case IntNumber(a) =>
+              a.toInt
+            case Sentence(a) => a.toString
+            case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
+            case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
+          }
+          val value2 = group(1) match {
+            case Value(a) => inputVTable.list(a) match {
+              case IntNumber(a) => a.toInt
+            }
+            case IntNumber(a) => a.toInt
+            case Sentence(a) => a.toString
+            case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
+            case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
+          }
+          result = value1.toString.toInt % value2.toString.toInt
         }
       }
     }

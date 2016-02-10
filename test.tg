@@ -1,4 +1,4 @@
-(defn fib [x] (if (or (= x 0) (= x 1)) x (+ (fib (- x 2)) (fib (- x 1)))))
-(fib 20)
-(defn fact [n] (if (= n 0) 1 (* n (fact (- n 1)))))
-(fact 3)
+(defn ack [m n] (if (= m 0) (+ n 1) (if (= n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1))))))
+(ack 3 5)
+(defn gcd [a b] (if (= b 0) a (gcd b (rem a b))))
+(gcd 20 15)
