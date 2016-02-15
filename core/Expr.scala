@@ -6,7 +6,7 @@ import scala.collection.immutable
 sealed trait Expr
   case class Empty(value: Int) extends Expr
   case class IntNumber(value: String) extends Expr
-  case class Sentence(value: Expr) extends Expr
+  case class Sentence(value: Value) extends Expr
   case class Value(value: String) extends Expr
   case class Keyword(value: String) extends Expr
   case class Bool(value: String) extends Expr

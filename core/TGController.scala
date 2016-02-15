@@ -6,27 +6,30 @@ import scala.util.{Failure, Success}
 /**
   * Created by stylejy on 24/01/2016.
   */
-class TGReader {
+class TGController {
   val vTable = new TGVariableSymbolTable
   val fTable = new TGFunctionSymbolTable
 
-  val source = Source.fromFile("test.tg")
+  val file = "test2.tg"
+  val source = Source.fromFile(file)
+  //Split the pure name without its type to pass the name as the class name in JVM code.
+  val name = file.split('.')(0)
+  val generator = new TGByteCodeGenerator(name)
+
   for(line <- source.getLines()) {
     println(line)
     val treeGen = new TGParser(line)
     treeGen.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
-        //println("Result: " + result.eval(tree) + "\nTree: " + tree)
-        //val test = new ByteCodeGenerator("test", tree)
-        //test.writer
-        val result = new TGTreeEvaluator().evalExpression(tree, vTable, fTable)
+        val result = new TGTreeEvaluator(generator).run(tree, vTable, fTable)
         if(result.isInstanceOf[Unit])
           println("RESULT =============> Done!")
         else
           println("RESULT =============> " + result)
       case Failure(e: ParseError) => println("Expression is not valid")
       case Failure(e) => println("Unexpected error")
+    }
   }
-  }
+  generator.composer
 }

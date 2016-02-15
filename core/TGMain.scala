@@ -3,7 +3,7 @@
   */
 object TGMain {
   def main(args: Array[String]): Unit = {
-    new TGReader
+    new TGController
   }
 
 }

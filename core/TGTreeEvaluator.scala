@@ -4,15 +4,13 @@ import scala.collection.immutable
   * Created by stylejy on 13/12/2015.
   */
 //dependentDepth: Integer number shows depth from the root.
-class TGTreeEvaluator {
+class TGTreeEvaluator(inputCodeGenerator: TGByteCodeGenerator) {
   val keywordList = new TGKeywordList
-  val indent = {
-    /*var space = ""
-    for (i <- 0 to info.depth) {
-      space += "   "
-    }
-    space*/
-    "   "
+  val codeGenerator = inputCodeGenerator
+
+  def run(expr: Expr, vTable: TGVariableSymbolTable, fTable: TGFunctionSymbolTable): Any = {
+    codeGenerator.evalExpression(expr)
+    evalExpression(expr, vTable,fTable)
   }
 
   def evalExpression(expr: Expr, vTable: TGVariableSymbolTable, fTable: TGFunctionSymbolTable): Any = {
@@ -34,27 +32,26 @@ class TGTreeEvaluator {
 
   def evalUserFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any ={
     //println(indent + "[CALL] User function: " + firstInput)
-    val initialArg = secondInput match {
-      case Argument(a) =>
-        a
+    val userInputArg = secondInput match {
+      case Argument(a) => a
     }
-    val arg = new Array[Expr](initialArg.size)
-    for (i <- 0 until initialArg.size) {
-      if(initialArg(i) match {
+    val arg = new Array[Expr](userInputArg.size)
+    for (i <- userInputArg.indices) {
+      if(userInputArg(i) match {
         case Function(a, b) => true
         case UserFunction(a, b) => true
         case Value(a) => true
         case _ => false
       }) {
-        arg(i) = initialArg(i) match {
+        arg(i) = userInputArg(i) match {
           case Value(a) => IntNumber(evalExpression(inputVTable.list(a), inputVTable, inputFTable).toString)
           case Function(a, b) => IntNumber(evalFunction(a, b, inputVTable, inputFTable).toString)
           case UserFunction(a, b) => IntNumber(evalUserFunction(a, b, inputVTable, inputFTable).toString)
         }
       } else {
-        arg(i) = initialArg(i)
+        arg(i) = userInputArg(i)
       }
-      //println(initialArg(i) + "---->" + arg(i))
+      //println(userInputArg(i) + "---->" + arg(i))
     }
 
     //(+ (fib (- x 2)) (fib (- x 1))) x should be same, but if both fibs are shared vTable,
@@ -93,13 +90,20 @@ class TGTreeEvaluator {
       //println("--> Keyword " + keyword +"\'s argument: " + secondInput)
       keyword match {
         case "defn" => functionDefn(secondInput, inputVTable, inputFTable)
-        case "if" => functionIf(secondInput, inputVTable, inputFTable)
-        case "or" => functionOr(secondInput, inputVTable, inputFTable)
-        case "=" => functionEqual(secondInput, inputVTable, inputFTable)
-        case "+" => functionPlus(secondInput, inputVTable, inputFTable)
-        case "-" => functionMinus(secondInput, inputVTable, inputFTable)
-        case "*" => functionMultiply(secondInput, inputVTable, inputFTable)
-        case "rem" => functionRemainder(secondInput, inputVTable, inputFTable)
+        case "if" =>
+          functionIf(secondInput, inputVTable, inputFTable)
+        case "or" =>
+          functionOr(secondInput, inputVTable, inputFTable)
+        case "=" =>
+          functionEqual(secondInput, inputVTable, inputFTable)
+        case "+" =>
+          functionPlus(secondInput, inputVTable, inputFTable)
+        case "-" =>
+          functionMinus(secondInput, inputVTable, inputFTable)
+        case "*" =>
+          functionMultiply(secondInput, inputVTable, inputFTable)
+        case "rem" =>
+          functionRemainder(secondInput, inputVTable, inputFTable)
       }
     } else {
       println("Keyword doesn't match")
@@ -115,16 +119,18 @@ class TGTreeEvaluator {
       }
       count = count + 1
     }
-    return value
+    value
   }
 
   def functionDefn(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Unit = {
     inputArguments match {
       case Argument(group) => {
         if(group.size == 3) {
+          /*
           val parameter = group(1) match {
             case Vector(name) => deriveValueFromVector(name)
           }
+          */
           //println(indent + " User declared function name: " + group(0))
           val functionName = group(0) match {
             case Value(name) => name.toString
@@ -134,13 +140,14 @@ class TGTreeEvaluator {
           } catch {
             case ex: NoSuchElementException =>
               inputFTable.list += (functionName.toString -> (group(1),group(2)))
-
+/*
               try {
                 inputVTable.list(parameter.toString)
               } catch {
                 case ex: NoSuchElementException =>
                   inputVTable.list += (parameter.toString -> Empty(0))
               }
+              */
           }
           //println(indent + " " + functionName.toString + "'s parameter: " + inputVTable.list(parameter.toString))
           //println(indent + " " + functionName.toString + "'s body: " + inputFTable.list(functionName.toString))
@@ -163,10 +170,12 @@ class TGTreeEvaluator {
           //println(indent + " if's true statement: " + group(1))
           //println(indent + " if's false statement: " + group(2))
 
-          if (evalExpression(group(0), inputVTable, inputFTable).toString.toBoolean)
+          if (evalExpression(group(0), inputVTable, inputFTable).toString.toBoolean) {
             evalExpression(group(1), inputVTable, inputFTable)
-          else
+          }
+          else {
             evalExpression(group(2), inputVTable, inputFTable)
+          }
         }
       }
     }
@@ -182,20 +191,20 @@ class TGTreeEvaluator {
             case Value(a) =>
               if(inputVTable.list(a).equals("true")) {
                 //println(true)
-                return true
+                true
               }
             case IntNumber(a) =>
               //println(true)
-              return true
+              true
             case Bool(a) =>
               if(a.toBoolean) {
                 //println(true)
-                return true
+                true
               }
             case Function(a, b) =>
               if(evalFunction(a, b, inputVTable, inputFTable).equals(true)) {
                 //println(true)
-                return true
+                true
               }
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
@@ -206,6 +215,7 @@ class TGTreeEvaluator {
     result
   }
 
+  //Accept only two arguments
   def functionEqual(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Boolean = {
     var result = false
     inputArguments match {
@@ -364,7 +374,6 @@ class TGTreeEvaluator {
             }
             case IntNumber(a) =>
               a.toInt
-            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
@@ -373,7 +382,6 @@ class TGTreeEvaluator {
               case IntNumber(a) => a.toInt
             }
             case IntNumber(a) => a.toInt
-            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
