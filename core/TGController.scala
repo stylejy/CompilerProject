@@ -22,14 +22,21 @@ class TGController {
     treeGen.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
-        val result = new TGTreeEvaluator(generator).run(tree, vTable, fTable)
-        if(result.isInstanceOf[Unit])
-          println("RESULT =============> Done!")
-        else
-          println("RESULT =============> " + result)
+        generator.evalExpression(tree)
+        try {
+          val result = new TGTreeEvaluator().evalExpression(tree, vTable, fTable)
+          if (result.isInstanceOf[Unit])
+            println("RESULT =============> Done!")
+          else
+            println("RESULT =============> " + result)
+        } catch {
+          case ex: StackOverflowError => println("StackOverflowError by the interpreter")
+        }
       case Failure(e: ParseError) => println("Expression is not valid")
       case Failure(e) => println("Unexpected error")
     }
   }
   generator.composer
+
+
 }

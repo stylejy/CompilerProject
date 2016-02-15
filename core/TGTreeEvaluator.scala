@@ -4,14 +4,8 @@ import scala.collection.immutable
   * Created by stylejy on 13/12/2015.
   */
 //dependentDepth: Integer number shows depth from the root.
-class TGTreeEvaluator(inputCodeGenerator: TGByteCodeGenerator) {
+class TGTreeEvaluator {
   val keywordList = new TGKeywordList
-  val codeGenerator = inputCodeGenerator
-
-  def run(expr: Expr, vTable: TGVariableSymbolTable, fTable: TGFunctionSymbolTable): Any = {
-    codeGenerator.evalExpression(expr)
-    evalExpression(expr, vTable,fTable)
-  }
 
   def evalExpression(expr: Expr, vTable: TGVariableSymbolTable, fTable: TGFunctionSymbolTable): Any = {
     expr match {

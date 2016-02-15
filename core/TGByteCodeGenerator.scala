@@ -19,6 +19,8 @@ class TGByteCodeGenerator(classname: String) {
   var variableTable = Map[String, Int]()
   //Switch to choose where the contents are written, 0(default) in body, 1 in UserFuncBody.
   var switch = 0
+  //Used to avoid using the same labels are written many times.
+  var labelTable = Map[String, Int]()
 
   def lineFeed(input: Int): String = {
     val feed = "\n"
@@ -58,10 +60,12 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         contents += "iadd" + lineFeed(2)
     }
@@ -77,10 +81,12 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         contents += "isub" + lineFeed(2)
     }
@@ -96,10 +102,12 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
+          case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
         contents += "imul" + lineFeed(2)
     }
@@ -142,12 +150,14 @@ class TGByteCodeGenerator(classname: String) {
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
         }
-        contents += "if_icmpeq Equal" + lineFeed(1)
+        val labelEqual = labelManager("EQUAL")
+        val labelStopEqual = labelManager("STOPEQUAL")
+        contents += "if_icmpeq " + labelEqual + lineFeed(1)
         contents += "iconst_0" + lineFeed(1)
-        contents += "goto stopequal" + lineFeed(1)
-        contents += "Equal:" + lineFeed(1)
+        contents += "goto " + labelStopEqual + lineFeed(1)
+        contents +=  labelEqual + ":" + lineFeed(1)
         contents += "iconst_1" + lineFeed(1)
-        contents += "stopequal:" + lineFeed(2)
+        contents += labelStopEqual + ":" + lineFeed(2)
     }
     bodyWriter(contents)
     contents
@@ -158,28 +168,30 @@ class TGByteCodeGenerator(classname: String) {
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
+        val labelTrue = labelManager("TRUE")
+        val labelEscapeor = labelManager("ESCAPEOR")
         for(i <- group) {
           i match {
             case IntNumber(a) =>
               contents += numberRange(a.toInt)
-              contents += "ifgt True" + lineFeed(1)
+              contents += "ifgt " + labelTrue + lineFeed(1)
             case Bool(a) =>
               if (a.equals("true"))
                 contents += "iconst_1" + lineFeed(1)
               else
                 contents += "iconst_0" + lineFeed(1)
-              contents += "ifgt True" + lineFeed(1)
+              contents += "ifgt " + labelTrue + lineFeed(1)
           }
         }
         //If it reaches the next line, it means there's no true statement in the given input.
         //Returns 0
         contents += lineFeed(1) + "iconst_0" + lineFeed(1)
-        contents += "goto escapeor" + lineFeed(2)
+        contents += "goto " + labelEscapeor + lineFeed(2)
         //If ifgt finds a true element, the loop stops and returns 1
-        contents += "True:" + lineFeed(1)
+        contents += labelTrue + ":" + lineFeed(1)
         contents += "iconst_1" + lineFeed(2)
         //If it fails, it skips the True: part
-        contents += "escapeor:" + lineFeed(2)
+        contents += labelEscapeor + ":" + lineFeed(2)
     }
     bodyWriter(contents)
     contents
@@ -189,6 +201,8 @@ class TGByteCodeGenerator(classname: String) {
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
+        val labelFalse = labelManager("FALSE")
+        val labelEscapeif = labelManager("ESCAPEIF")
         group(0) match {
           case Bool("true") => contents += numberRange(1)
           case IntNumber(a) => contents += numberRange(1)
@@ -200,7 +214,7 @@ class TGByteCodeGenerator(classname: String) {
               contents += i
           case _ => contents += numberRange(0)
         }
-        contents += "ifeq False" + lineFeed(1)
+        contents += "ifeq " + labelFalse + lineFeed(1)
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) =>
@@ -211,8 +225,8 @@ class TGByteCodeGenerator(classname: String) {
             for(i <- userFunction(a, b))
               contents += i
         }
-        contents += "goto escapeif" + lineFeed(1)
-        contents += "False:" + lineFeed(1)
+        contents += "goto " + labelEscapeif + lineFeed(1)
+        contents += labelFalse + ":" + lineFeed(1)
         group(2) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) =>
@@ -224,7 +238,7 @@ class TGByteCodeGenerator(classname: String) {
               contents += i
             }
         }
-        contents += "escapeif:" + lineFeed(2)
+        contents += labelEscapeif + ":" + lineFeed(2)
     }
     bodyWriter(contents)
     contents
@@ -321,12 +335,16 @@ class TGByteCodeGenerator(classname: String) {
     }
     //val rArgs =  args.reverse
     for (i <- args) {
-      val argValue = i match {
+      i match {
         case IntNumber(a) => contents += numberRange(a.toInt)
         case Value(a) => contents +=  "iload " + getLocalVariable(a) + lineFeed(1)
         case Function(a, b) =>
           for(i <- functionSelector(a, b).asInstanceOf[ListBuffer[String]])
             contents += i
+        case UserFunction(a, b) =>
+          for(i <- userFunction(a, b)) {
+            contents += i
+          }
       }
     }
     contents += userFunctionTable(name)
@@ -388,8 +406,16 @@ class TGByteCodeGenerator(classname: String) {
     variables.indexOf(input)
   }
 
-  def labelManager: Unit = {
-
+  def labelManager(input: String): String = {
+    if(labelTable.contains(input)) {
+      //If a function tries to use the same label already existed, labelTable gives the incremented number to differentiate.
+      val incrementedNumber = labelTable(input)+1
+      labelTable += (input -> incrementedNumber)
+      input + labelTable(input)
+    } else {
+      labelTable += (input -> 0)
+      input + 0
+    }
   }
 
   def composer: Unit = {
