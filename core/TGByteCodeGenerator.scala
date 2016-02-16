@@ -7,7 +7,8 @@ import scala.collection.mutable.ListBuffer
   * Thanks GOD for all.
   */
 class TGByteCodeGenerator(classname: String) {
-
+  //whole ast initially empty
+  var ast = ""
   val pw = new PrintWriter(new File(classname+".tgcode"))
   //Using ListBuffer instead of List to make appending each code easier.
   val body = new ListBuffer[String]
@@ -18,9 +19,13 @@ class TGByteCodeGenerator(classname: String) {
   //used to generate a code
   var variableTable = Map[String, Int]()
   //Switch to choose where the contents are written, 0(default) in body, 1 in UserFuncBody.
-  var switch = 0
+  //Switch also let a function knows who's called.
+  //switch._1 shows if userFunction works and switch._2 shows the userFunction's name.
+  var switch = (0, "")
   //Used to avoid using the same labels are written many times.
   var labelTable = Map[String, Int]()
+  //Shows how many recursive calls calling itself are used inside the UserFunction code
+  var numberOfRecursiveCall = 0
 
   def lineFeed(input: Int): String = {
     val feed = "\n"
@@ -61,11 +66,17 @@ class TGByteCodeGenerator(classname: String) {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         contents += "iadd" + lineFeed(2)
     }
@@ -82,11 +93,17 @@ class TGByteCodeGenerator(classname: String) {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         contents += "isub" + lineFeed(2)
     }
@@ -103,11 +120,17 @@ class TGByteCodeGenerator(classname: String) {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         contents += "imul" + lineFeed(2)
     }
@@ -124,11 +147,17 @@ class TGByteCodeGenerator(classname: String) {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         contents += "irem" + lineFeed(2)
     }
@@ -144,11 +173,17 @@ class TGByteCodeGenerator(classname: String) {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += "iload " + variableTable(a) + lineFeed(1)
+          case UserFunction(a, b) =>
+            for(i <- userFunction(a, b))
+              contents += i
         }
         val labelEqual = labelManager("EQUAL")
         val labelStopEqual = labelManager("STOPEQUAL")
@@ -181,6 +216,9 @@ class TGByteCodeGenerator(classname: String) {
               else
                 contents += "iconst_0" + lineFeed(1)
               contents += "ifgt " + labelTrue + lineFeed(1)
+            case UserFunction(a, b) =>
+              for(i <- userFunction(a, b))
+                contents += i
           }
         }
         //If it reaches the next line, it means there's no true statement in the given input.
@@ -256,9 +294,7 @@ class TGByteCodeGenerator(classname: String) {
               userFunctionTable(functionName.toString)
             } catch {
               case ex: NoSuchElementException =>
-                switch = 1
-
-                var counter = 1
+                switch = (1, functionName)
 
                 val args = group(1) match {
                   case Vector(a) => a
@@ -277,6 +313,9 @@ class TGByteCodeGenerator(classname: String) {
                 userFuncBody += ".limit locals " + space._1 + lineFeed(1)
                 userFuncBody += ".limit stack " + space._2 + lineFeed(1)
 
+                //Starting label avoid recursive functiona call
+                userFuncBody += functionName.toUpperCase + "START:" + lineFeed(1)
+
                 for(i <- args) {
                   val name = i match {
                     case Value(a) => a
@@ -292,13 +331,18 @@ class TGByteCodeGenerator(classname: String) {
                 userFuncBody += "   " + "ireturn" + lineFeed(1)
                 userFuncBody += ".end method" + lineFeed(2)
 
-                switch = 0
+                switch = (0, "")
             }
           }
         }
     }
   }
   //*********************************** Function End
+
+  def run(expr: Expr): Unit = {
+    ast = expr.toString
+    evalExpression(expr)
+  }
 
   def evalExpression(expr: Expr): Any = {
     expr match {
@@ -318,7 +362,7 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   def bodyWriter(input: ListBuffer[String]): Unit = {
-    if(switch.equals(0)) {
+    if(switch._1.equals(0)) {
       for(i <- input)
         body += i
     }
@@ -333,7 +377,9 @@ class TGByteCodeGenerator(classname: String) {
     val args = secondInput match {
       case Argument(a) => a
     }
-    //val rArgs =  args.reverse
+
+    countRecursiveCalls(name)
+
     for (i <- args) {
       i match {
         case IntNumber(a) => contents += numberRange(a.toInt)
@@ -347,10 +393,28 @@ class TGByteCodeGenerator(classname: String) {
           }
       }
     }
-    contents += userFunctionTable(name)
+
+    //Efficient code only works with only one recursive call
+    if(name.equals(switch._2) && numberOfRecursiveCall.equals(1)) {
+      var numberOfArgs = args.size
+      while (numberOfArgs > 0) {
+        contents += "istore " + (numberOfArgs - 1) + lineFeed(1)
+        numberOfArgs = numberOfArgs - 1
+      }
+      contents += "goto " + name.toUpperCase + "START" + lineFeed(1)
+    } else {
+      //userFunctionTable returns invokestatic code for the given parameter name.
+      contents += userFunctionTable(name)
+    }
 
     bodyWriter(contents)
     contents
+  }
+
+  def countRecursiveCalls(input: String): Unit = {
+    val array = ast.split(input)
+    //array.size says the larger number by 2 than the number of its actual recursive calls
+    numberOfRecursiveCall = array.size - 2
   }
 
   def deriveValueFromVector(inputVector: immutable.Seq[Expr]): String = {

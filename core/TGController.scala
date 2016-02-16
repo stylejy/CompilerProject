@@ -22,7 +22,7 @@ class TGController {
     treeGen.InputLine.run() match {
       case Success(tree) =>
         println("Tree: " + tree)
-        generator.evalExpression(tree)
+        generator.run(tree)
         try {
           val result = new TGTreeEvaluator().evalExpression(tree, vTable, fTable)
           if (result.isInstanceOf[Unit])
