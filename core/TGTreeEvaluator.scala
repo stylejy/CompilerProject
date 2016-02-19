@@ -98,6 +98,8 @@ class TGTreeEvaluator {
           functionMultiply(secondInput, inputVTable, inputFTable)
         case "rem" =>
           functionRemainder(secondInput, inputVTable, inputFTable)
+        case "println" =>
+          functionPrintln(secondInput, inputVTable, inputFTable)
       }
     } else {
       println("Keyword doesn't match")
@@ -114,6 +116,12 @@ class TGTreeEvaluator {
       count = count + 1
     }
     value
+  }
+
+  def functionPrintln(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    inputArguments match {
+      case Argument(arg) => evalExpression(arg(0), inputVTable, inputFTable)
+    }
   }
 
   def functionDefn(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Unit = {

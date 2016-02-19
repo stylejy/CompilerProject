@@ -38,7 +38,7 @@ class TGByteCodeGenerator(classname: String) {
 
     pw.write(".method public static main : ([Ljava/lang/String;)V" + lineFeed(1))
 
-    val space = spaceEvaluator
+    val space = spaceEstimator
     pw.write(".limit stack " + space._1 + lineFeed(1))
     pw.write(".limit locals " + space._2 + lineFeed(2))
 
@@ -52,7 +52,7 @@ class TGByteCodeGenerator(classname: String) {
     pw.write(".end method" + lineFeed(2))
   }
 
-  def spaceEvaluator: (Int, Int) = {
+  def spaceEstimator: (Int, Int) = {
     (10,10)
   }
 
@@ -63,13 +63,9 @@ class TGByteCodeGenerator(classname: String) {
     input match {
       case Argument(group) =>
         group(0) match {
-          case IntNumber(a) => contents += numberRange(a.toInt)
+          case IntNumber(a) => contents += singleInt(a)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -77,11 +73,7 @@ class TGByteCodeGenerator(classname: String) {
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -100,11 +92,7 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -112,11 +100,7 @@ class TGByteCodeGenerator(classname: String) {
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -135,11 +119,7 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -147,11 +127,7 @@ class TGByteCodeGenerator(classname: String) {
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -170,11 +146,7 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -182,11 +154,7 @@ class TGByteCodeGenerator(classname: String) {
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -204,11 +172,7 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -216,11 +180,7 @@ class TGByteCodeGenerator(classname: String) {
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) => functionSelector(a, b)
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -247,6 +207,7 @@ class TGByteCodeGenerator(classname: String) {
         val labelEscapeor = labelManager("ESCAPEOR")
         for(i <- group) {
           i match {
+            case Value(a) => contents += singleValue(a)
             case IntNumber(a) =>
               contents += numberRange(a.toInt)
               contents += "ifgt " + labelTrue + lineFeed(1)
@@ -282,6 +243,7 @@ class TGByteCodeGenerator(classname: String) {
         val labelFalse = labelManager("FALSE")
         val labelEscapeif = labelManager("ESCAPEIF")
         group(0) match {
+          case Value(a) => contents += singleValue(a)
           case Bool("true") => contents += numberRange(1)
           case IntNumber(a) => contents += numberRange(1)
           case Function(a, b) =>
@@ -298,11 +260,7 @@ class TGByteCodeGenerator(classname: String) {
           case Function(a, b) =>
             for(i <- functionSelector(a, b).asInstanceOf[ListBuffer[String]])
               contents += i
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b))
               contents += i
@@ -314,11 +272,7 @@ class TGByteCodeGenerator(classname: String) {
           case Function(a, b) =>
             for(i <- functionSelector(a, b).asInstanceOf[ListBuffer[String]])
               contents += i
-          case Value(a) =>
-            if(switch._2.equals("main"))
-              contents += "iload " + variableTable(a) + lineFeed(1)
-            else
-              contents += "iload " + userFunctionVariableTable(switch._2)(a) + lineFeed(1)
+          case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
             for(i <- userFunction(a, b)) {
               contents += i
@@ -357,7 +311,7 @@ class TGByteCodeGenerator(classname: String) {
                 //for generating user function codes.
                 val methodTitle = ".method public static " + functionName.toString +" : (" + argGen + ")I" + lineFeed(1)
                 userFuncBody += methodTitle
-                val space = spaceEvaluator
+                val space = spaceEstimator
                 userFuncBody += ".limit locals " + space._1 + lineFeed(1)
                 userFuncBody += ".limit stack " + space._2 + lineFeed(1)
 
@@ -387,6 +341,38 @@ class TGByteCodeGenerator(classname: String) {
   }
   //*********************************** Function End
 
+  //*********************************** Single Value start
+  def singleInt(input: String): String = {
+    val contentsForBodyWriter = new ListBuffer[String]
+    var contentsForReturn = ""
+
+    val numResult = numberRange(input.toInt)
+    contentsForBodyWriter += numResult
+    contentsForReturn = numResult
+
+    bodyWriter(contentsForBodyWriter)
+    contentsForReturn
+  }
+
+  def singleValue(input: String): String = {
+    val contentsForBodyWriter = new ListBuffer[String]
+    var contentsForReturn = ""
+    var numResult = ""
+
+    if(switch._1.equals(0)) {
+      numResult = "iload " + variableTable(input) + lineFeed(1)
+    } else {
+      numResult = "iload " + userFunctionVariableTable(switch._2)(input) + lineFeed(1)
+    }
+
+    contentsForBodyWriter += numResult
+    contentsForReturn = numResult
+
+    bodyWriter(contentsForBodyWriter)
+    contentsForReturn
+  }
+  //*********************************** Single Value End
+
   def run(expr: Expr): Unit = {
     ast = expr.toString
     evalExpression(expr)
@@ -394,9 +380,9 @@ class TGByteCodeGenerator(classname: String) {
 
   def evalExpression(expr: Expr): Any = {
     expr match {
-      case Value(a) => variableTable(a)
+      case Value(a) => singleValue(a)
       case Keyword(a) => a
-      case IntNumber(a) => a.toInt
+      case IntNumber(a) => singleInt(a)
       case Bool(a) => a.toBoolean
       case Sentence(a) => a match {
         case Value(a) => a
@@ -428,9 +414,6 @@ class TGByteCodeGenerator(classname: String) {
 
     countRecursiveCalls(name)
 
-    if(switch._1.equals(0))
-      contents += "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
-
     for (i <- args) {
       i match {
         case IntNumber(a) => contents += numberRange(a.toInt)
@@ -457,9 +440,6 @@ class TGByteCodeGenerator(classname: String) {
       //userFunctionTable returns invokestatic code for the given parameter name.
       contents += userFunctionTable(name)
     }
-
-    if(switch._1.equals(0))
-      contents += "invokevirtual java/io/PrintStream println (I)V" + lineFeed(2)
 
     bodyWriter(contents)
     contents
@@ -565,6 +545,25 @@ class TGByteCodeGenerator(classname: String) {
     pw.close()
   }
 
+  def funcPrintln(input: Expr): ListBuffer[String] = {
+    val contents = new ListBuffer[String]
+
+    //Main parts will be added first than the getstatic below, therefore bodyWriter should come just after the getstatic line.
+    contents += "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
+    bodyWriter(contents)
+
+    input match {
+      case Argument(arg) => evalExpression(arg(0))
+    }
+
+    //Before going to bodyWriter again, getstatic should be removed first or it gets duplication.
+    contents -= "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
+    contents += "invokevirtual java/io/PrintStream println (I)V" + lineFeed(2)
+    bodyWriter(contents)
+
+    contents
+  }
+
   def functionSelector(firstInput: Expr, secondInput: Argument): Any = {
     val keyword = firstInput match {
       case Keyword(a) => a.toString
@@ -579,7 +578,7 @@ class TGByteCodeGenerator(classname: String) {
       case "-" => funcMinus(secondInput)
       case "*" => funcMultiply(secondInput)
       case "rem" => funcRemainder(secondInput)
+      case "println" => funcPrintln(secondInput)
     }
   }
-
 }

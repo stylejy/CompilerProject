@@ -13,5 +13,5 @@ class TGKeywordList {
   keywordList += ("-" -> true)
   keywordList += ("*" -> true)
   keywordList += ("rem" -> true)
-
+  keywordList += ("println" -> true)
 }
