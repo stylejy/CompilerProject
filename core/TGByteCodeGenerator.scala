@@ -30,6 +30,7 @@ class TGByteCodeGenerator(classname: String) {
   var numberOfRecursiveCall = 0
   val spaceEstimator = new TGSpaceEstimator
   var spaceForUserFunc = Map[String, (Int, Int)]()
+  //Sizes of local and stack should be at least 1 each.
   var spaceForMain = (1, 1)
 
   def lineFeed(input: Int): String = {
@@ -323,6 +324,7 @@ class TGByteCodeGenerator(classname: String) {
               userFunctionTable(functionName.toString)
             } catch {
               case ex: NoSuchElementException =>
+                //switch 1 means defn function is processed.
                 switch = (1, functionName)
 
                 val args = group(1) match {
@@ -360,6 +362,7 @@ class TGByteCodeGenerator(classname: String) {
                 userFuncBody += "   " + "ireturn" + lineFeed(1)
                 userFuncBody += ".end method" + lineFeed(2)
 
+                //switch 2 means defn function is done.
                 switch = (0, "")
             }
           }
