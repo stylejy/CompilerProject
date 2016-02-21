@@ -75,7 +75,8 @@ class TGSpaceEstimator {
           case Argument(group) =>
             var result = 0
             for (i <- group) {
-              result += expression(i)
+              //getstatic needs a 1 stack space for Int
+              result += expression(i) + 1
             }
             result
         }

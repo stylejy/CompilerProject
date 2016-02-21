@@ -30,7 +30,7 @@ class TGByteCodeGenerator(classname: String) {
   var numberOfRecursiveCall = 0
   val spaceEstimator = new TGSpaceEstimator
   var spaceForUserFunc = Map[String, (Int, Int)]()
-  var spaceForMain = (0, 0)
+  var spaceForMain = (1, 1)
 
   def lineFeed(input: Int): String = {
     val feed = "\n"
@@ -43,8 +43,8 @@ class TGByteCodeGenerator(classname: String) {
 
     pw.write(".method public static main : ([Ljava/lang/String;)V" + lineFeed(1))
 
-    pw.write(".limit stack " + spaceForMain._1 + lineFeed(1))
-    pw.write(".limit locals " + spaceForMain._2 + lineFeed(2))
+    pw.write(".limit locals " + spaceForMain._1 + lineFeed(1))
+    pw.write(".limit stack " + spaceForMain._2 + lineFeed(2))
   }
 
   def footer: Unit = {
