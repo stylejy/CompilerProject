@@ -22,10 +22,15 @@ class TGByteCodeGenerator(classname: String) {
   //Switch also let a function knows who's called.
   //switch._1 shows if userFunction works and switch._2 shows the userFunction's name.
   var switch = (0, "")
+  //Indicates if a calculation function like arithmetic functions and boolean functions is processed or not
+  var calculationFunctionSwitch = (0, "")
   //Used to avoid using the same labels are written many times.
   var labelTable = Map[String, Int]()
   //Shows how many recursive calls calling itself are used inside the UserFunction code
   var numberOfRecursiveCall = 0
+  val spaceEstimator = new TGSpaceEstimator
+  var spaceForUserFunc = Map[String, (Int, Int)]()
+  var spaceForMain = (0, 0)
 
   def lineFeed(input: Int): String = {
     val feed = "\n"
@@ -38,27 +43,22 @@ class TGByteCodeGenerator(classname: String) {
 
     pw.write(".method public static main : ([Ljava/lang/String;)V" + lineFeed(1))
 
-    val space = spaceEstimator
-    pw.write(".limit stack " + space._1 + lineFeed(1))
-    pw.write(".limit locals " + space._2 + lineFeed(2))
-
-    //pw.write("getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2))
+    pw.write(".limit stack " + spaceForMain._1 + lineFeed(1))
+    pw.write(".limit locals " + spaceForMain._2 + lineFeed(2))
   }
 
   def footer: Unit = {
     pw.write(lineFeed(2))
-    //pw.write("invokevirtual java/io/PrintStream println (I)V" + lineFeed(2))
     pw.write("return" + lineFeed(1))
     pw.write(".end method" + lineFeed(2))
-  }
-
-  def spaceEstimator: (Int, Int) = {
-    (10,10)
   }
 
   //*********************************** Function Start
   //2 integer numbers addition
   def funcPlus(input: Expr): ListBuffer[String] = {
+    val name = "plus"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -80,12 +80,17 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "iadd" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
 
   //2 integer numbers substraction
   def funcMinus(input: Expr): ListBuffer[String] = {
+    val name = "minus"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -107,12 +112,17 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "isub" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
 
   //2 integer numbers multiplication
   def funcMultiply(input: Expr): ListBuffer[String] = {
+    val name = "multi"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -121,7 +131,7 @@ class TGByteCodeGenerator(classname: String) {
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
-            for(i <- userFunction(a, b))
+            for (i <- userFunction(a, b))
               contents += i
         }
         group(1) match {
@@ -129,17 +139,22 @@ class TGByteCodeGenerator(classname: String) {
           case Function(a, b) => functionSelector(a, b)
           case Value(a) => contents += singleValue(a)
           case UserFunction(a, b) =>
-            for(i <- userFunction(a, b))
+            for (i <- userFunction(a, b))
               contents += i
         }
         contents += "imul" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
 
-  //2 integer numbers multiplication
+  //2 integer numbers remainder
   def funcRemainder(input: Expr): ListBuffer[String] = {
+    val name = "rem"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -161,11 +176,16 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "irem" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
 
   def funcEqual(input: Expr): ListBuffer[String] = {
+    val name = "equal"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -194,12 +214,17 @@ class TGByteCodeGenerator(classname: String) {
         contents += "iconst_1" + lineFeed(1)
         contents += labelStopEqual + ":" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
 
   //Supports multiple Integer arguments
   def funcOr(input: Expr): ListBuffer[String] = {
+    val name = "or"
+    if(calculationFunctionSwitch._1.equals(0))
+      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -232,6 +257,8 @@ class TGByteCodeGenerator(classname: String) {
         //If it fails, it skips the True: part
         contents += labelEscapeor + ":" + lineFeed(2)
     }
+    if(calculationFunctionSwitch._2.equals(name))
+      calculationFunctionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
@@ -311,7 +338,7 @@ class TGByteCodeGenerator(classname: String) {
                 //for generating user function codes.
                 val methodTitle = ".method public static " + functionName.toString +" : (" + argGen + ")I" + lineFeed(1)
                 userFuncBody += methodTitle
-                val space = spaceEstimator
+                val space = spaceForUserFunc(functionName)
                 userFuncBody += ".limit locals " + space._1 + lineFeed(1)
                 userFuncBody += ".limit stack " + space._2 + lineFeed(1)
 
@@ -375,6 +402,24 @@ class TGByteCodeGenerator(classname: String) {
 
   def run(expr: Expr): Unit = {
     ast = expr.toString
+    val spaceResult = spaceEstimator.run(expr)
+    expr match {
+      case Function(Keyword("defn"), b) =>
+        b match {
+          case Argument(group) =>
+            val funcName = group(0) match {
+              case Value(a) => a
+            }
+            //For the given line which is the function calling defn.
+            spaceForUserFunc += (funcName -> spaceResult)
+        }
+      case _ =>
+        //For functions except defn to decide the main's space.
+        if(spaceForMain._1 < spaceResult._1)
+          spaceForMain = (spaceResult._1, spaceForMain._1)
+        if(spaceForMain._2 < spaceResult._2)
+          spaceForMain = (spaceForMain._1, spaceResult._2)
+    }
     evalExpression(expr)
   }
 
@@ -428,8 +473,8 @@ class TGByteCodeGenerator(classname: String) {
       }
     }
 
-    //Efficient code only works with only one recursive call
-    if(name.equals(switch._2) && numberOfRecursiveCall.equals(1)) {
+    //Efficient code only works with only one recursive call and it shouldn't be with calculation functions.
+    if(name.equals(switch._2) && numberOfRecursiveCall.equals(1) && calculationFunctionSwitch.equals(0)) {
       var numberOfArgs = args.size
       while (numberOfArgs > 0) {
         contents += "istore " + (numberOfArgs - 1) + lineFeed(1)

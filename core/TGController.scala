@@ -10,7 +10,7 @@ class TGController {
   val vTable = new TGVariableSymbolTable
   val fTable = new TGFunctionSymbolTable
 
-  val file = "test.tg"
+  val file = "test2.tg"
   val source = Source.fromFile(file)
   //Split the pure name without its type to pass the name as the class name in JVM code.
   val name = file.split('.')(0)

@@ -5,3 +5,5 @@
 (println (ack 3 5))
 (defn gcd [a b] (if (= b 0) a (gcd b (rem a b))))
 (println (gcd 20 15))
+(defn fact [n] (if (= n 0) 1 (* n (fact (- n 1)))))
+(println (fact 8))
