@@ -21,9 +21,10 @@ class TGByteCodeGenerator(classname: String) {
   //Switch to choose where the contents are written, 0(default) in body, 1 in UserFuncBody.
   //Switch also let a function knows who's called.
   //switch._1 shows if userFunction works and switch._2 shows the userFunction's name.
-  var switch = (0, "")
+  var userFunctionSwitch = (0, "")
   //Indicates if a calculation function like arithmetic functions and boolean functions is processed or not
   var calculationFunctionSwitch = (0, "")
+  var functionSwitch = (0, "")
   //Used to avoid using the same labels are written many times.
   var labelTable = Map[String, Int]()
   //Shows how many recursive calls calling itself are used inside the UserFunction code
@@ -265,6 +266,9 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   def funcIf(input: Expr): ListBuffer[String] = {
+    val name = "if"
+    if(functionSwitch._1.equals(0))
+      functionSwitch = (1, name)
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
@@ -308,6 +312,8 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += labelEscapeif + ":" + lineFeed(2)
     }
+    if(functionSwitch._2.equals(name))
+      functionSwitch = (0, "")
     bodyWriter(contents)
     contents
   }
@@ -325,7 +331,7 @@ class TGByteCodeGenerator(classname: String) {
             } catch {
               case ex: NoSuchElementException =>
                 //switch 1 means defn function is processed.
-                switch = (1, functionName)
+                userFunctionSwitch = (1, functionName)
 
                 val args = group(1) match {
                   case Vector(a) => a
@@ -363,13 +369,63 @@ class TGByteCodeGenerator(classname: String) {
                 userFuncBody += ".end method" + lineFeed(2)
 
                 //switch 2 means defn function is done.
-                switch = (0, "")
+                userFunctionSwitch = (0, "")
             }
           }
         }
     }
   }
+
+  def funcList(input: Expr): ListBuffer[String] = {
+    val name = "list"
+    if(functionSwitch._1.equals(0))
+      functionSwitch = (1, name)
+    val contents = new ListBuffer[String]
+    contents += "new java/util/ArrayList" + lineFeed(1)
+    contents += "dup" + lineFeed(1)
+    contents += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
+    val numberOfArgs = variableTable.size
+    var variableNumber = 0
+    if (!numberOfArgs.equals(0))
+      variableNumber = numberOfArgs
+    contents += "astore " + variableNumber + lineFeed(1)
+    val info = ("list" + variableNumber -> variableNumber)
+    variableTable += info
+
+    input match {
+      case Argument(group) =>
+        for(i <- group) {
+          contents += evalExpression(i).toString
+        }
+    }
+
+    contents += lineFeed(2)
+
+    if(functionSwitch._2.equals(name))
+      functionSwitch = (0, "")
+    bodyWriter(contents)
+    contents
+  }
   //*********************************** Function End
+
+  def functionSelector(firstInput: Expr, secondInput: Argument): Any = {
+    val keyword = firstInput match {
+      case Keyword(a) => a.toString
+    }
+
+    keyword match {
+      case "defn" => funcDefn(secondInput)
+      case "if" => funcIf(secondInput)
+      case "or" => funcOr(secondInput)
+      case "=" => funcEqual(secondInput)
+      case "+" => funcPlus(secondInput)
+      case "-" => funcMinus(secondInput)
+      case "*" => funcMultiply(secondInput)
+      case "rem" => funcRemainder(secondInput)
+      case "println" => funcPrintln(secondInput)
+      case "list" => funcList(secondInput)
+    }
+  }
 
   //*********************************** Single Value start
   def singleInt(input: String): String = {
@@ -380,7 +436,9 @@ class TGByteCodeGenerator(classname: String) {
     contentsForBodyWriter += numResult
     contentsForReturn = numResult
 
-    bodyWriter(contentsForBodyWriter)
+    if(functionSwitch._1.equals(0) & userFunctionSwitch._1.equals(0) & calculationFunctionSwitch._1.equals(0)) {
+      bodyWriter(contentsForBodyWriter)
+    }
     contentsForReturn
   }
 
@@ -389,10 +447,10 @@ class TGByteCodeGenerator(classname: String) {
     var contentsForReturn = ""
     var numResult = ""
 
-    if(switch._1.equals(0)) {
+    if(userFunctionSwitch._1.equals(0)) {
       numResult = "iload " + variableTable(input) + lineFeed(1)
     } else {
-      numResult = "iload " + userFunctionVariableTable(switch._2)(input) + lineFeed(1)
+      numResult = "iload " + userFunctionVariableTable(userFunctionSwitch._2)(input) + lineFeed(1)
     }
 
     contentsForBodyWriter += numResult
@@ -439,12 +497,12 @@ class TGByteCodeGenerator(classname: String) {
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => functionSelector(a, b)
       case UserFunction(a, b) => userFunction(a, b)
-
+      //case ListQuote(a) =>
     }
   }
 
   def bodyWriter(input: ListBuffer[String]): Unit = {
-    if(switch._1.equals(0)) {
+    if(userFunctionSwitch._1.equals(0)) {
       for(i <- input)
         body += i
     }
@@ -465,7 +523,13 @@ class TGByteCodeGenerator(classname: String) {
     for (i <- args) {
       i match {
         case IntNumber(a) => contents += numberRange(a.toInt)
-        case Value(a) => contents +=  "iload " + getLocalVariable(name, a) + lineFeed(1)
+        case Value(a) =>
+          //If user function is called in funcDefn, variable is looked up with the function name used in funcDefn.
+          //Otherwise, it uses userFunction's name.
+          if(userFunctionSwitch._1.equals(0))
+            contents +=  "iload " + getLocalVariable(name, a) + lineFeed(1)
+          else
+            contents +=  "iload " + getLocalVariable(userFunctionSwitch._2, a) + lineFeed(1)
         case Function(a, b) =>
           for(i <- functionSelector(a, b).asInstanceOf[ListBuffer[String]])
             contents += i
@@ -477,7 +541,7 @@ class TGByteCodeGenerator(classname: String) {
     }
 
     //Efficient code only works with only one recursive call and it shouldn't be with calculation functions.
-    if(name.equals(switch._2) && numberOfRecursiveCall.equals(1) && calculationFunctionSwitch.equals(0)) {
+    if(name.equals(userFunctionSwitch._2) && numberOfRecursiveCall.equals(1) && calculationFunctionSwitch.equals(0)) {
       var numberOfArgs = args.size
       while (numberOfArgs > 0) {
         contents += "istore " + (numberOfArgs - 1) + lineFeed(1)
@@ -529,7 +593,9 @@ class TGByteCodeGenerator(classname: String) {
     val functionName = firstInput
     val variableName = secondInput
 
-    if(switch._1.equals(1)) {
+    println("add Local Variable: " + functionName + " " + variableName)
+
+    if(userFunctionSwitch._1.equals(1)) {
       try {
         val numberOfArgs = userFunctionVariableTable(functionName).size
         val info = (variableName -> numberOfArgs)
@@ -543,7 +609,7 @@ class TGByteCodeGenerator(classname: String) {
     } else {
       val numberOfArgs = variableTable.size
       if (!numberOfArgs.equals(0)) {
-        val info = (variableName -> (numberOfArgs - 1))
+        val info = (variableName -> numberOfArgs)
         variableTable += info
       }
       else {
@@ -558,6 +624,7 @@ class TGByteCodeGenerator(classname: String) {
     val variableName = secondInput
     //refurns the local variable number by function
     if(!functionName.equals("main")) {
+      println("get Local Variable: " + functionName + " " + variableName)
       userFunctionVariableTable(functionName)(variableName)
     }
     else
@@ -610,23 +677,5 @@ class TGByteCodeGenerator(classname: String) {
     bodyWriter(contents)
 
     contents
-  }
-
-  def functionSelector(firstInput: Expr, secondInput: Argument): Any = {
-    val keyword = firstInput match {
-      case Keyword(a) => a.toString
-    }
-
-    keyword match {
-      case "defn" => funcDefn(secondInput)
-      case "if" => funcIf(secondInput)
-      case "or" => funcOr(secondInput)
-      case "=" => funcEqual(secondInput)
-      case "+" => funcPlus(secondInput)
-      case "-" => funcMinus(secondInput)
-      case "*" => funcMultiply(secondInput)
-      case "rem" => funcRemainder(secondInput)
-      case "println" => funcPrintln(secondInput)
-    }
   }
 }

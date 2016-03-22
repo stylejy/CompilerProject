@@ -37,6 +37,7 @@ class TGSpaceEstimator {
             }
             result
         }
+      case ListQuote(a) => 0 //should change
     }
   }
 

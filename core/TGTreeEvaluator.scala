@@ -1,11 +1,14 @@
+import scala.Unit
 import scala.collection.immutable
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by stylejy on 13/12/2015.
   */
 //dependentDepth: Integer number shows depth from the root.
 class TGTreeEvaluator {
-  val keywordList = new TGKeywordList
+  //Flag to show if List is used by ListFuctions like nth and first
+  var listUsedByListFunction = 0
 
   def evalExpression(expr: Expr, vTable: TGVariableSymbolTable, fTable: TGFunctionSymbolTable): Any = {
     expr match {
@@ -20,7 +23,7 @@ class TGTreeEvaluator {
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => evalFunction(a, b, vTable, fTable)
       case UserFunction(a, b) => evalUserFunction(a, b, vTable, fTable)
-
+      //case ListQuote(a) => functionListQuote(a, vTable, fTable)
     }
   }
 
@@ -79,43 +82,78 @@ class TGTreeEvaluator {
 
   def evalFunction(firstInput: Expr, secondInput: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable ): Any = {
     val keyword = evalExpression(firstInput, inputVTable, inputFTable).toString
-    if(keywordList.keywordList(keyword)){
-      //println(indent + info.name + "--> Keyword " + keyword +"\'s argument: " + secondInput)
-      //println("--> Keyword " + keyword +"\'s argument: " + secondInput)
-      keyword match {
-        case "defn" => functionDefn(secondInput, inputVTable, inputFTable)
-        case "if" =>
-          functionIf(secondInput, inputVTable, inputFTable)
-        case "or" =>
-          functionOr(secondInput, inputVTable, inputFTable)
-        case "=" =>
-          functionEqual(secondInput, inputVTable, inputFTable)
-        case "+" =>
-          functionPlus(secondInput, inputVTable, inputFTable)
-        case "-" =>
-          functionMinus(secondInput, inputVTable, inputFTable)
-        case "*" =>
-          functionMultiply(secondInput, inputVTable, inputFTable)
-        case "rem" =>
-          functionRemainder(secondInput, inputVTable, inputFTable)
-        case "println" =>
-          functionPrintln(secondInput, inputVTable, inputFTable)
-      }
-    } else {
-      println("Keyword doesn't match")
+    keyword match {
+      case "defn" => functionDefn(secondInput, inputVTable, inputFTable)
+      case "if" =>
+        functionIf(secondInput, inputVTable, inputFTable)
+      case "or" =>
+        functionOr(secondInput, inputVTable, inputFTable)
+      case "=" =>
+        functionEqual(secondInput, inputVTable, inputFTable)
+      case "+" =>
+        functionPlus(secondInput, inputVTable, inputFTable)
+      case "-" =>
+        functionMinus(secondInput, inputVTable, inputFTable)
+      case "*" =>
+        functionMultiply(secondInput, inputVTable, inputFTable)
+      case "rem" =>
+        functionRemainder(secondInput, inputVTable, inputFTable)
+      case "println" =>
+        functionPrintln(secondInput, inputVTable, inputFTable)
+      case "list" =>
+        functionListFunc(secondInput, inputVTable, inputFTable)
     }
   }
 
   def deriveValueFromVector(inputVector: immutable.Seq[Expr]): String = {
     var value = ""
-    var count = 0
     for (i <- inputVector) {
-      value = inputVector(count) match {
+      value = i match {
         case Value(name) => name.toString
       }
-      count = count + 1
     }
     value
+  }
+
+  /*
+  def functionListQuote(inputArguments: immutable.Seq[Expr], inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    var value = "("
+    var counter = 0
+    for (i <- inputArguments) {
+      if (counter.equals(inputArguments.size - 1)) {
+        //needs parenthesis to wrap up the pattern matching
+        value += (i match {
+          case IntNumber(a) => a
+          case ListQuote(a) => functionListQuote(a, inputVTable, inputFTable)
+          case UserFunction(a, b) => a
+        })
+      } else {
+        value += (i match {
+          case IntNumber(a) => a
+          case ListQuote(a) => functionListQuote(a, inputVTable, inputFTable)
+          case UserFunction(a, b) => a
+        })
+        value += " "
+      }
+      counter = counter + 1
+    }
+    value += ")"
+    value
+  }
+
+  */
+  def functionListFunc(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    val buffer = new ListBuffer[Any]
+    inputArguments match {
+      case Argument(group) =>
+        for (i <- 0 until group.size) {
+          buffer += evalExpression(group(i), inputVTable, inputFTable)
+        }
+    }
+    if (listUsedByListFunction.equals(0))
+      buffer.mkString("(", ", ", ")")
+    else
+      buffer
   }
 
   def functionPrintln(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
@@ -184,34 +222,32 @@ class TGTreeEvaluator {
   }
 
   def functionOr(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Boolean = {
-    val result = false
+    var result = false
     inputArguments match {
-      case Argument(group) => {
-        for (i <- 0 until group.size) {
+      case Argument(group) =>
+        for (i <- 0 until group.size)
           //println(indent + " or's condition(" + i + "): " + group(i))
           group(i) match {
             case Value(a) =>
               if(inputVTable.list(a).equals("true")) {
                 //println(true)
-                true
+                result = true
               }
             case IntNumber(a) =>
               //println(true)
-              true
+              result = true
             case Bool(a) =>
               if(a.toBoolean) {
                 //println(true)
-                true
+                result = true
               }
             case Function(a, b) =>
               if(evalFunction(a, b, inputVTable, inputFTable).equals(true)) {
                 //println(true)
-                true
+                result = true
               }
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
-        }
-      }
     }
     //println(result)
     result
