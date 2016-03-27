@@ -7,10 +7,7 @@ class TGSpaceEstimator {
 
   def run(input: Expr): (Int, Int) = {
     val stackSize = expression(input)
-
-    val localResult = localSize
-    localSize = 0
-    (localResult,stackSize)
+    (localSize,stackSize)
   }
 
   def expression(expr: Expr): Int = {
@@ -37,7 +34,6 @@ class TGSpaceEstimator {
             }
             result
         }
-      case ListQuote(a) => 0 //should change
     }
   }
 
@@ -80,6 +76,20 @@ class TGSpaceEstimator {
               result += expression(i) + 1
             }
             result
+        }
+      case "list" =>
+        secondInput match {
+          case Argument(group) =>
+            for (i <- group) {
+              expression(i)
+            }
+        }
+        localSize += 1
+        2
+      case "nth" =>
+        secondInput match {
+          case Argument(group) =>
+            expression(group(0))
         }
       case _ => 0
     }

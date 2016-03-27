@@ -101,7 +101,9 @@ class TGTreeEvaluator {
       case "println" =>
         functionPrintln(secondInput, inputVTable, inputFTable)
       case "list" =>
-        functionListFunc(secondInput, inputVTable, inputFTable)
+        functionList(secondInput, inputVTable, inputFTable)
+      case "nth" =>
+        functionListNth(secondInput, inputVTable, inputFTable)
     }
   }
 
@@ -142,7 +144,37 @@ class TGTreeEvaluator {
   }
 
   */
-  def functionListFunc(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+  def functionListNth(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    var result = ""
+    var nested = 0
+
+    if(listUsedByListFunction.equals(1))
+      nested = 1
+
+    listUsedByListFunction = 1
+    inputArguments match {
+      case Argument(group) =>
+        val list = evalExpression(group(0), inputVTable, inputFTable).asInstanceOf[ListBuffer[Any]]
+        val number = group(1) match {
+          case IntNumber(a) => a.toInt
+        }
+        val extractedValue = list(number)
+
+        if(extractedValue.isInstanceOf[ListBuffer[Any]]) {
+          if (nested.equals(0))
+            result = extractedValue.asInstanceOf[ListBuffer[Any]].mkString("(", ", ", ")")
+          else
+          //for (nth (nth (list 1 (list 1 2)) 1) 1)
+            return extractedValue.asInstanceOf[ListBuffer[Any]]
+        }
+        else
+          result = extractedValue.toString()
+    }
+    listUsedByListFunction = 0
+    result
+  }
+
+  def functionList(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
     val buffer = new ListBuffer[Any]
     inputArguments match {
       case Argument(group) =>

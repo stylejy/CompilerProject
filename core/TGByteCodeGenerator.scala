@@ -33,6 +33,9 @@ class TGByteCodeGenerator(classname: String) {
   var spaceForUserFunc = Map[String, (Int, Int)]()
   //Sizes of local and stack should be at least 1 each.
   var spaceForMain = (1, 1)
+  //Println output parameter value, default is I (which means interger value).
+  var outParam = "I"
+
 
   def lineFeed(input: Int): String = {
     val feed = "\n"
@@ -376,11 +379,23 @@ class TGByteCodeGenerator(classname: String) {
     }
   }
 
+  //It saves its parent's functionSwitch information and put the information back to the switch.
   def funcList(input: Expr): ListBuffer[String] = {
     val name = "list"
+    val contents = new ListBuffer[String]
+    var nested = 0
+    var parentName = ""
+    outParam = "Ljava/lang/Object;"
+
     if(functionSwitch._1.equals(0))
       functionSwitch = (1, name)
-    val contents = new ListBuffer[String]
+    else {
+      contents += lineFeed(1)
+      nested = 1
+      parentName = functionSwitch._2
+      functionSwitch = (1, name)
+    }
+
     contents += "new java/util/ArrayList" + lineFeed(1)
     contents += "dup" + lineFeed(1)
     contents += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
@@ -395,13 +410,74 @@ class TGByteCodeGenerator(classname: String) {
     input match {
       case Argument(group) =>
         for(i <- group) {
-          contents += evalExpression(i).toString
+          contents += "aload " + variableNumber + lineFeed(1)
+          val evaluatedValue = evalExpression(i)
+          //Check if the list is nested in another list.
+          if(evaluatedValue.isInstanceOf[ListBuffer[String]]) {
+            for(j <- evaluatedValue.asInstanceOf[ListBuffer[String]])
+              contents += j
+          }
+          else {
+            contents += evaluatedValue.toString
+          }
+          contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
+          contents += "pop" + lineFeed(1)
         }
+        if(nested.equals(1))
+          contents += "aload " + variableNumber + lineFeed(1)
     }
 
     contents += lineFeed(2)
 
+    if(nested.equals(0)) {
+      bodyWriter(contents)
+    }
     if(functionSwitch._2.equals(name))
+      functionSwitch = (1, parentName)
+    else
+      functionSwitch = (0, "")
+    contents
+  }
+
+  //It saves its parent's functionSwitch information and put the information back to the switch.
+  def funcListNth(input: Expr): ListBuffer[String] = {
+    val name = "nth"
+    val contents = new ListBuffer[String]
+    var nested = 0
+    var parentName = ""
+    outParam = "Ljava/lang/Object;"
+
+    if(functionSwitch._1.equals(0))
+      functionSwitch = (1, name)
+    else {
+      nested = 1
+      parentName = functionSwitch._2
+      functionSwitch = (1, name)
+    }
+
+    input match {
+      case Argument(group) =>
+        //Only accepts list function for the first argument
+        group(0) match {
+          case Function(a, b) => a match {
+            case Keyword(a) =>
+              if(a.equals("list"))
+                for(i <- evalExpression(group(0)).asInstanceOf[ListBuffer[String]])
+                  contents += i
+          }
+        }
+
+        group(1) match {
+          case IntNumber(a) =>
+            contents += evalExpression(group(1)).toString
+        }
+
+        contents += "invokevirtual java/util/ArrayList get (I)Ljava/lang/Object;" + lineFeed(1)
+
+    }
+    if(functionSwitch._2.equals(name))
+      functionSwitch = (1, parentName)
+    else
       functionSwitch = (0, "")
     bodyWriter(contents)
     contents
@@ -424,6 +500,7 @@ class TGByteCodeGenerator(classname: String) {
       case "rem" => funcRemainder(secondInput)
       case "println" => funcPrintln(secondInput)
       case "list" => funcList(secondInput)
+      case "nth" => funcListNth(secondInput)
     }
   }
 
@@ -477,7 +554,7 @@ class TGByteCodeGenerator(classname: String) {
       case _ =>
         //For functions except defn to decide the main's space.
         if(spaceForMain._1 < spaceResult._1)
-          spaceForMain = (spaceResult._1, spaceForMain._1)
+          spaceForMain = (spaceResult._1, spaceForMain._2)
         if(spaceForMain._2 < spaceResult._2)
           spaceForMain = (spaceForMain._1, spaceResult._2)
     }
@@ -576,16 +653,20 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   def numberRange(input: Int): String = {
-    if(input == -1) {
-      "iconst_m1" + lineFeed(1)
-    } else if(input <= 5) {
-      "iconst_" + input + lineFeed(1)
-    } else if(input >= -128 && input <= 127) {
-      "bipush " + input + lineFeed(1)
-    } else if(input >= -32768 && input <= 32767) {
-      "sipush " + input + lineFeed(1)
-    } else {
-      "ldc " + input + lineFeed(1)
+    if(functionSwitch._2.equals("list"))
+      "ldc " + "'" + input + "'" + lineFeed(1)
+    else {
+      if (input == -1) {
+        "iconst_m1" + lineFeed(1)
+      } else if (input <= 5) {
+        "iconst_" + input + lineFeed(1)
+      } else if (input >= -128 && input <= 127) {
+        "bipush " + input + lineFeed(1)
+      } else if (input >= -32768 && input <= 32767) {
+        "sipush " + input + lineFeed(1)
+      } else {
+        "ldc " + input + lineFeed(1)
+      }
     }
   }
 
@@ -668,12 +749,12 @@ class TGByteCodeGenerator(classname: String) {
     bodyWriter(contents)
 
     input match {
-      case Argument(arg) => evalExpression(arg(0))
+      case Argument(arg) => evalExpression(arg.head)
     }
 
     //Before going to bodyWriter again, getstatic should be removed first or it gets duplication.
     contents -= "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
-    contents += "invokevirtual java/io/PrintStream println (I)V" + lineFeed(2)
+    contents += "invokevirtual java/io/PrintStream println (" + outParam + ")V" + lineFeed(2)
     bodyWriter(contents)
 
     contents
