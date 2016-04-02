@@ -66,7 +66,7 @@ class TGTreeEvaluator {
       case Vector(a) => a
     }
 
-    if(arg.size.equals(vars.size)) {
+    if(arg.length.equals(vars.length)) {
       var counter = 0
       for(i <- vars) {
         val varName = i match {
@@ -154,7 +154,7 @@ class TGTreeEvaluator {
     listUsedByListFunction = 1
     inputArguments match {
       case Argument(group) =>
-        val list = evalExpression(group(0), inputVTable, inputFTable).asInstanceOf[ListBuffer[Any]]
+        val list = evalExpression(group.head, inputVTable, inputFTable).asInstanceOf[ListBuffer[Any]]
         val number = group(1) match {
           case IntNumber(a) => a.toInt
         }

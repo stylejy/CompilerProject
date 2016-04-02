@@ -1,1 +1,2 @@
-(println (nth (list 1 3) 1))
+(defn ack [m n] (if (= m 0) (+ n 1) (if (= n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1))))))
+(println (ack 3 5))

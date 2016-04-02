@@ -429,6 +429,9 @@ class TGByteCodeGenerator(classname: String) {
 
     contents += lineFeed(2)
 
+    //Put 'I' back to outParam.
+    //outParam = "I"
+
     if(nested.equals(0)) {
       bodyWriter(contents)
     }
@@ -581,7 +584,7 @@ class TGByteCodeGenerator(classname: String) {
   def bodyWriter(input: ListBuffer[String]): Unit = {
     if(userFunctionSwitch._1.equals(0)) {
       for(i <- input)
-        body += i
+        body += "   " + i
     }
   }
 
