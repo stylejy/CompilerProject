@@ -367,9 +367,13 @@ class TGByteCodeGenerator(classname: String) {
 
                 }
 
-                val bodyContents = evalExpression(group(2)).asInstanceOf[ListBuffer[String]]
-                for (i <- bodyContents)
-                  userFuncBody += "   " + i
+                val bodyContents = evalExpression(group(2))
+                if (bodyContents.isInstanceOf[ListBuffer[String]]) {
+                  for (i <- bodyContents.asInstanceOf[ListBuffer[String]])
+                    userFuncBody += "   " + i
+                }
+                else
+                  userFuncBody += "   " + bodyContents.toString
 
                 userFuncBody += "   " + "ireturn" + lineFeed(1)
                 userFuncBody += ".end method" + lineFeed(2)

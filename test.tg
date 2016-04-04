@@ -1,2 +1,2 @@
-(defn test [x] (if (= x 0) x (println x)))
+(defn test [x] x)
 (test 3)
