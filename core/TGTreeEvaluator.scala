@@ -104,6 +104,8 @@ class TGTreeEvaluator {
         functionList(secondInput, inputVTable, inputFTable)
       case "nth" =>
         functionListNth(secondInput, inputVTable, inputFTable)
+      case "sort" =>
+        functionSort(secondInput, inputVTable, inputFTable)
     }
   }
 
@@ -144,6 +146,36 @@ class TGTreeEvaluator {
   }
 
   */
+  def functionSort(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    listUsedByListFunction = 1
+
+    val buffer = inputArguments match {
+      case Argument(group) =>
+        val list = evalExpression(group.head, inputVTable, inputFTable).asInstanceOf[ListBuffer[Any]]
+        var finishSign = 0
+
+        while (finishSign.equals(0)) {
+          var swapSign = 0
+          for (i <- 0 to list.size - 2) {
+            if (list(i).asInstanceOf[Int] > list(i + 1).asInstanceOf[Int]) {
+              val temp = list(i)
+              list.update(i, list(i + 1))
+                list.update(i + 1, temp)
+                swapSign = 1 //If at least once swapping happens swapSign will be 1
+              }
+            }
+          if(swapSign.equals(0)) //swapSign 0 meas any value of the list was swapped. In other words, all values are in the right order.
+            finishSign = 1
+        }
+
+        list
+    }
+
+    listUsedByListFunction = 0
+    buffer
+  }
+
+
   def functionListNth(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
     var result = ""
     var nested = 0

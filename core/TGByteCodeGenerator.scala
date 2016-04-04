@@ -1,6 +1,7 @@
 import java.io._
-import scala.collection.{mutable, immutable}
+
 import scala.collection.mutable.ListBuffer
+import scala.collection.{immutable, mutable}
 
 /**
   * Created by stylejy on 18/11/2015.
@@ -513,6 +514,7 @@ class TGByteCodeGenerator(classname: String) {
       case "println" => funcPrintln(secondInput) //**Only function doesn't return any value within this compiler. It could be a problem if this is used in defn. Defn assumes any user function returns a integer value.
       case "list" => funcList(secondInput)
       case "nth" => funcListNth(secondInput)
+      case "sort" =>
     }
   }
 

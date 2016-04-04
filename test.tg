@@ -1,2 +1,1 @@
-(defn test [x] x)
-(test 3)
+(sort (list 1 2 4 5 3 6 4))
