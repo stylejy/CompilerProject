@@ -322,6 +322,9 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   def funcDefn(input: Expr): Unit = {
+    val previousSwitch = functionSwitch
+    functionSwitch = (1, "defn")
+
     input match {
       case Argument(group) =>
         if(group.size == 3) {
@@ -340,14 +343,14 @@ class TGByteCodeGenerator(classname: String) {
                   case Vector(a) => a
                 }
                 val numberOfArgs = args.size
-                val argGen = "I" * numberOfArgs
+                val arguments = "I" * numberOfArgs
 
                 //for function calling from main.
-                val functionCall = "invokestatic " + classname + " " + functionName + " (" + argGen + ")I" + lineFeed(1)
+                val functionCall = "invokestatic " + classname + " " + functionName + " (" + arguments + ")I" + lineFeed(1)
                 userFunctionTable += (functionName.toString -> functionCall)
 
                 //for generating user function codes.
-                val methodTitle = ".method public static " + functionName.toString +" : (" + argGen + ")I" + lineFeed(1)
+                val methodTitle = ".method public static " + functionName.toString +" : (" + arguments + ")I" + lineFeed(1)
                 userFuncBody += methodTitle
                 val space = spaceForUserFunc(functionName)
                 userFuncBody += ".limit locals " + space._1 + lineFeed(1)
@@ -377,6 +380,7 @@ class TGByteCodeGenerator(classname: String) {
           }
         }
     }
+    functionSwitch = previousSwitch
   }
 
   //It saves its parent's functionSwitch information and put the information back to the switch.
@@ -420,10 +424,11 @@ class TGByteCodeGenerator(classname: String) {
           else {
             contents += evaluatedValue.toString
           }
+          contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1) //For converting primitive integer to object Integer.
           contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
           contents += "pop" + lineFeed(1)
         }
-        if(nested.equals(1))
+        if(nested.equals(1) || userFunctionSwitch.equals((1, "println")))
           contents += "aload " + variableNumber + lineFeed(1)
     }
 
@@ -501,7 +506,7 @@ class TGByteCodeGenerator(classname: String) {
       case "-" => funcMinus(secondInput)
       case "*" => funcMultiply(secondInput)
       case "rem" => funcRemainder(secondInput)
-      case "println" => funcPrintln(secondInput)
+      case "println" => funcPrintln(secondInput) //**Only function doesn't return any value within this compiler. It could be a problem if this is used in defn. Defn assumes any user function returns a integer value.
       case "list" => funcList(secondInput)
       case "nth" => funcListNth(secondInput)
     }
@@ -656,20 +661,16 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   def numberRange(input: Int): String = {
-    if(functionSwitch._2.equals("list"))
-      "ldc " + "'" + input + "'" + lineFeed(1)
-    else {
-      if (input == -1) {
-        "iconst_m1" + lineFeed(1)
-      } else if (input <= 5) {
-        "iconst_" + input + lineFeed(1)
-      } else if (input >= -128 && input <= 127) {
-        "bipush " + input + lineFeed(1)
-      } else if (input >= -32768 && input <= 32767) {
-        "sipush " + input + lineFeed(1)
-      } else {
-        "ldc " + input + lineFeed(1)
-      }
+    if (input == -1) {
+      "iconst_m1" + lineFeed(1)
+    } else if (input <= 5) {
+      "iconst_" + input + lineFeed(1)
+    } else if (input >= -128 && input <= 127) {
+      "bipush " + input + lineFeed(1)
+    } else if (input >= -32768 && input <= 32767) {
+      "sipush " + input + lineFeed(1)
+    } else {
+      "ldc " + input + lineFeed(1)
     }
   }
 
@@ -746,18 +747,43 @@ class TGByteCodeGenerator(classname: String) {
 
   def funcPrintln(input: Expr): ListBuffer[String] = {
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "println")
 
     //Main parts will be added first than the getstatic below, therefore bodyWriter should come just after the getstatic line.
     contents += "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
-    bodyWriter(contents)
 
-    input match {
-      case Argument(arg) => evalExpression(arg.head)
+    if(nested.equals(0)) {
+      bodyWriter(contents)
+      //Before going to bodyWriter again, getstatic should be removed first or it gets duplication.
+      contents -= "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
     }
 
-    //Before going to bodyWriter again, getstatic should be removed first or it gets duplication.
-    contents -= "getstatic java/lang/System out Ljava/io/PrintStream;" + lineFeed(2)
+    val result = input match {
+      case Argument(arg) => evalExpression(arg.head)
+    }
+    //Type check if the result is String or ListBuffer. It could be a separate function to also support other functions.
+    if (result.isInstanceOf[ListBuffer[String]]) {
+      for (i <- result.asInstanceOf[ListBuffer[String]])
+        contents += i + lineFeed(1)
+    } else
+      contents += result.toString
+
+
     contents += "invokevirtual java/io/PrintStream println (" + outParam + ")V" + lineFeed(2)
+
+    //In case println is used in defn, defn should return a integer value but println originally doesn't return a value.
+    //So next two lines force Println put a interger value into the stack to avoid the error.
+    if(nested.equals(1))
+      contents += "iconst_0" + lineFeed(1)
+
+    functionSwitch = previousSwitch
     bodyWriter(contents)
 
     contents

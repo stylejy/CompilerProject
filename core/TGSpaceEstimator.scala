@@ -24,12 +24,12 @@ class TGSpaceEstimator {
 
   def expression(expr: Expr): (Int, Int) = {
     expr match {
-      case Value(a) => (localSize, 1)
-      case Keyword(a) => (localSize, 1)
-      case IntNumber(a) => (localSize, 1)
-      case Bool(a) => (localSize, 1)
-      case Sentence(a) => (localSize, 1)
-      case Argument(a) => (localSize, stackSize)//it doesn't affect the stack size.
+      case Value(a) => returnResult(localSize, 1)
+      case Keyword(a) => returnResult(localSize, 1)
+      case IntNumber(a) => returnResult(localSize, 1)
+      case Bool(a) => returnResult(localSize, 1)
+      case Sentence(a) => returnResult(localSize, 1)
+      case Argument(a) => returnResult(localSize, stackSize)//it doesn't affect the stack size.
       case Vector(a) => vector(a)
       case Function(a, b) => function(a, b)
       case UserFunction(a, b) =>
@@ -156,22 +156,26 @@ class TGSpaceEstimator {
         }
       case "list" =>
         numOfList += 1
+        localSize += 1
         if(numOfList > 1)
           nestedListSwitch = 1
-        secondInput match {
+        val result = secondInput match {
           case Argument(group) =>
+            var largestValue = (0, 0)
             for (i <- group) {
-              expression(i)
+              val value = expression(i)
+              if(value._1 > largestValue._1 || value._2 > largestValue._2)
+              largestValue = value
             }
+            largestValue
         }
-        localSize += 1
         if(nestedListSwitch.equals(1)) {
           numOfList -= 1
-          return (localSize, stackSize + 1)
+          return (result._1, result._2 + 1)
         }
         else if(numOfList.equals(1)) {
           numOfList -= 1
-          return (localSize, 2)
+          return (result._1, 2)
         }
         (localSize, stackSize)
       case "nth" =>
