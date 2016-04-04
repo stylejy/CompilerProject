@@ -1,1 +1,1 @@
-(sort (list 1 2 4 5 3 6 4))
+(println (nth (list 3 5 4) 2))

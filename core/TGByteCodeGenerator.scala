@@ -488,14 +488,30 @@ class TGByteCodeGenerator(classname: String) {
         contents += "invokevirtual java/util/ArrayList get (I)Ljava/lang/Object;" + lineFeed(1)
 
     }
+    if(nested.equals(0))
+      bodyWriter(contents)
     if(functionSwitch._2.equals(name))
       functionSwitch = (1, parentName)
     else
       functionSwitch = (0, "")
-    bodyWriter(contents)
     contents
   }
   //*********************************** Function End
+
+  //*********************************** Macro Start
+  def macroSort(inupt: Expr): ListBuffer[String] = {
+    val contents = new ListBuffer[String]
+
+
+
+    bodyWriter(contents)
+    contents
+  }
+
+  //*********************************** Macro End
+
+
+
 
   def functionSelector(firstInput: Expr, secondInput: Argument): Any = {
     val keyword = firstInput match {
@@ -514,7 +530,7 @@ class TGByteCodeGenerator(classname: String) {
       case "println" => funcPrintln(secondInput) //**Only function doesn't return any value within this compiler. It could be a problem if this is used in defn. Defn assumes any user function returns a integer value.
       case "list" => funcList(secondInput)
       case "nth" => funcListNth(secondInput)
-      case "sort" =>
+      case "sort" => macroSort(secondInput)
     }
   }
 
@@ -777,7 +793,7 @@ class TGByteCodeGenerator(classname: String) {
     //Type check if the result is String or ListBuffer. It could be a separate function to also support other functions.
     if (result.isInstanceOf[ListBuffer[String]]) {
       for (i <- result.asInstanceOf[ListBuffer[String]])
-        contents += i + lineFeed(1)
+        contents += i
     } else
       contents += result.toString
 
@@ -790,8 +806,9 @@ class TGByteCodeGenerator(classname: String) {
       contents += "iconst_0" + lineFeed(1)
 
     functionSwitch = previousSwitch
-    bodyWriter(contents)
 
+    if(nested.equals(0))
+      bodyWriter(contents)
     contents
   }
 }
