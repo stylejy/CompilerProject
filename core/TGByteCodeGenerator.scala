@@ -478,8 +478,8 @@ class TGByteCodeGenerator(classname: String) {
         group(0) match {
           case Function(a, b) => a match {
             case Keyword(a) =>
-              if(a.equals("list"))
-                for(i <- evalExpression(group(0)).asInstanceOf[ListBuffer[String]])
+              if(a.equals("list") || a.equals("rest"))
+                for(i <- evalExpression(group(0)).asInstanceOf[(ListBuffer[String], Int)]._1)
                   contents += i
           }
         }
@@ -501,7 +501,7 @@ class TGByteCodeGenerator(classname: String) {
     contents
   }
 
-  def funcRest(input: Expr): ListBuffer[String] = {
+  def funcRest(input: Expr): (ListBuffer[String], Int) = {
     val contents = new ListBuffer[String]
     var nested = 0
     val previousSwitch = functionSwitch
@@ -512,25 +512,24 @@ class TGByteCodeGenerator(classname: String) {
 
     functionSwitch = (1, "rest")
 
-    val referenceOfList = {
-      input match {
-        case Argument(group) =>
-          val value = evalExpression(group.head)
+    var referenceNumberOfList = -1
 
-          if(value.isInstanceOf[ListBuffer[String]]) {
-            for (i <- value.asInstanceOf[ListBuffer[String]]) {
-              contents += i
-              Nil
-            }
+    input match {
+      case Argument(group) =>
+        val value = evalExpression(group.head)
+        if(value.isInstanceOf[ListBuffer[String]]) {
+          for (i <- value.asInstanceOf[ListBuffer[String]]) {
+            contents += i
           }
-          else {
-            for (i <- value.asInstanceOf[(ListBuffer[String], Int)]._1) {
-              contents += i
-            }
-            "aload " + value.asInstanceOf[(ListBuffer[String], Int)]._2
+        }
+        else {
+          for (i <- value.asInstanceOf[(ListBuffer[String], Int)]._1) {
+            contents += i
           }
-      }
+          referenceNumberOfList = value.asInstanceOf[(ListBuffer[String], Int)]._2.toInt
+        }
     }
+
 
     contents += "iconst_0" + lineFeed(1)
     contents += "invokevirtual java/util/ArrayList remove (I)Ljava/lang/Object;" + lineFeed(1)
@@ -542,9 +541,9 @@ class TGByteCodeGenerator(classname: String) {
     if(!functionSwitch._2.equals("println"))
     //invokevirtual remove always returns dropped value so I should be popped out of the stack if it is in another method except println.
       contents += "pop" + lineFeed(1)
-    if(functionSwitch._2.equals("rest"))
-      contents += referenceOfList + lineFeed(1)
-    contents
+    if(functionSwitch._2.equals("rest") || functionSwitch._2.equals("nth") )
+      contents += "aload " + referenceNumberOfList + lineFeed(1)
+    (contents, referenceNumberOfList)
   }
   //*********************************** Function End
 

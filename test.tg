@@ -1,1 +1,1 @@
-(println (rest (rest (list 2 3 4 5))))
+(println (nth (rest (rest (list 2 3 4 5))) 1))
