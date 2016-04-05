@@ -1,7 +1,7 @@
 import java.io._
 
 import scala.collection.mutable.ListBuffer
-import scala.collection.{immutable, mutable}
+import scala.collection.{GenSeq, immutable, mutable}
 
 /**
   * Created by stylejy on 18/11/2015.
@@ -389,7 +389,7 @@ class TGByteCodeGenerator(classname: String) {
   }
 
   //It saves its parent's functionSwitch information and put the information back to the switch.
-  def funcList(input: Expr): ListBuffer[String] = {
+  def funcList(input: Expr): (ListBuffer[String], Int) = {
     val name = "list"
     val contents = new ListBuffer[String]
     var nested = 0
@@ -409,9 +409,12 @@ class TGByteCodeGenerator(classname: String) {
     contents += "dup" + lineFeed(1)
     contents += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
     val numberOfArgs = variableTable.size
-    var variableNumber = 0
-    if (!numberOfArgs.equals(0))
-      variableNumber = numberOfArgs
+    val variableNumber = {
+      if (!numberOfArgs.equals(0))
+        numberOfArgs
+      else
+        0
+    }
     contents += "astore " + variableNumber + lineFeed(1)
     val info = ("list" + variableNumber -> variableNumber)
     variableTable += info
@@ -428,6 +431,7 @@ class TGByteCodeGenerator(classname: String) {
           }
           else {
             contents += evaluatedValue.toString
+
           }
           contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1) //For converting primitive integer to object Integer.
           contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
@@ -449,7 +453,7 @@ class TGByteCodeGenerator(classname: String) {
       functionSwitch = (1, parentName)
     else
       functionSwitch = (0, "")
-    contents
+    (contents, variableNumber)
   }
 
   //It saves its parent's functionSwitch information and put the information back to the switch.
@@ -496,6 +500,52 @@ class TGByteCodeGenerator(classname: String) {
       functionSwitch = (0, "")
     contents
   }
+
+  def funcRest(input: Expr): ListBuffer[String] = {
+    val contents = new ListBuffer[String]
+    var nested = 0
+    val previousSwitch = functionSwitch
+
+    if (functionSwitch._1.equals(1)) {
+      nested = 1
+    }
+
+    functionSwitch = (1, "rest")
+
+    val referenceOfList = {
+      input match {
+        case Argument(group) =>
+          val value = evalExpression(group.head)
+
+          if(value.isInstanceOf[ListBuffer[String]]) {
+            for (i <- value.asInstanceOf[ListBuffer[String]]) {
+              contents += i
+              Nil
+            }
+          }
+          else {
+            for (i <- value.asInstanceOf[(ListBuffer[String], Int)]._1) {
+              contents += i
+            }
+            "aload " + value.asInstanceOf[(ListBuffer[String], Int)]._2
+          }
+      }
+    }
+
+    contents += "iconst_0" + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList remove (I)Ljava/lang/Object;" + lineFeed(1)
+
+    functionSwitch = previousSwitch
+
+    if (nested.equals(0))
+      bodyWriter(contents)
+    if(!functionSwitch._2.equals("println"))
+    //invokevirtual remove always returns dropped value so I should be popped out of the stack if it is in another method except println.
+      contents += "pop" + lineFeed(1)
+    if(functionSwitch._2.equals("rest"))
+      contents += referenceOfList + lineFeed(1)
+    contents
+  }
   //*********************************** Function End
 
   //*********************************** Macro Start
@@ -530,6 +580,7 @@ class TGByteCodeGenerator(classname: String) {
       case "println" => funcPrintln(secondInput) //**Only function doesn't return any value within this compiler. It could be a problem if this is used in defn. Defn assumes any user function returns a integer value.
       case "list" => funcList(secondInput)
       case "nth" => funcListNth(secondInput)
+      case "rest" => funcRest(secondInput)
       case "sort" => macroSort(secondInput)
     }
   }

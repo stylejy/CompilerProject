@@ -104,6 +104,8 @@ class TGTreeEvaluator {
         functionList(secondInput, inputVTable, inputFTable)
       case "nth" =>
         functionListNth(secondInput, inputVTable, inputFTable)
+      case "rest" =>
+        functionRest(secondInput, inputVTable, inputFTable)
       case "sort" =>
         functionSort(secondInput, inputVTable, inputFTable)
     }
@@ -146,6 +148,21 @@ class TGTreeEvaluator {
   }
 
   */
+  def functionRest(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
+    listUsedByListFunction = 1
+
+    val buffer = inputArguments match {
+      case Argument(group) =>
+        val list = evalExpression(group.head, inputVTable, inputFTable).asInstanceOf[ListBuffer[Any]]
+        list.remove(0)
+        list
+    }
+
+    listUsedByListFunction = 0
+    buffer
+  }
+
+  //*************************Sort needs changing.
   def functionSort(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
     listUsedByListFunction = 1
 
