@@ -190,6 +190,13 @@ class TGByteCodeGenerator(classname: String) {
 
   def funcEqual(input: Expr): ListBuffer[String] = {
     val name = "equal"
+    val nested = {
+      if (functionSwitch._1.equals(1)) {
+        1
+      } else
+        0
+    }
+
     if(calculationFunctionSwitch._1.equals(0))
       calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
@@ -222,7 +229,8 @@ class TGByteCodeGenerator(classname: String) {
     }
     if(calculationFunctionSwitch._2.equals(name))
       calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
     contents
   }
 
@@ -405,19 +413,11 @@ class TGByteCodeGenerator(classname: String) {
       functionSwitch = (1, name)
     }
 
-    contents += "new java/util/ArrayList" + lineFeed(1)
-    contents += "dup" + lineFeed(1)
-    contents += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
-    val numberOfArgs = variableTable.size
-    val variableNumber = {
-      if (!numberOfArgs.equals(0))
-        numberOfArgs
-      else
-        0
-    }
-    contents += "astore " + variableNumber + lineFeed(1)
-    val info = ("list" + variableNumber -> variableNumber)
-    variableTable += info
+    //New list
+    val newList = helperNewList
+    for(i <- newList._1)
+      contents += i
+    val variableNumber = newList._2
 
     input match {
       case Argument(group) =>
@@ -505,6 +505,7 @@ class TGByteCodeGenerator(classname: String) {
     val contents = new ListBuffer[String]
     var nested = 0
     val previousSwitch = functionSwitch
+    outParam = "Ljava/lang/Object;"
 
     if (functionSwitch._1.equals(1)) {
       nested = 1
@@ -538,27 +539,99 @@ class TGByteCodeGenerator(classname: String) {
 
     if (nested.equals(0))
       bodyWriter(contents)
-    if(!functionSwitch._2.equals("println"))
-    //invokevirtual remove always returns dropped value so I should be popped out of the stack if it is in another method except println.
-      contents += "pop" + lineFeed(1)
-    if(functionSwitch._2.equals("rest") || functionSwitch._2.equals("nth") )
-      contents += "aload " + referenceNumberOfList + lineFeed(1)
+    functionSwitch._2 match {
+      //invokevirtual remove always returns dropped value so I should be popped out of the stack if it is in another method except println and sort.
+      case "sort" | "println" =>
+      case _ => contents += "pop" + lineFeed(1)
+    }
+    functionSwitch._2 match {
+      case "rest" | "nth" => contents += "aload " + referenceNumberOfList + lineFeed(1)
+      case _ =>
+    }
     (contents, referenceNumberOfList)
   }
-  //*********************************** Function End
 
-  //*********************************** Macro Start
-  def macroSort(inupt: Expr): ListBuffer[String] = {
+  def funcSort(input: Expr): ListBuffer[String] = {
     val contents = new ListBuffer[String]
+    var nested = 0
+    val previousSwitch = functionSwitch
+    outParam = "Ljava/lang/Object;"
+
+    if (functionSwitch._1.equals(1)) {
+      nested = 1
+    }
+
+    functionSwitch = (1, "sort")
+
+    //1. New list
+    val newList = helperNewList
+    for(i <- newList._1)
+      contents += i
+    val variableNumber = newList._2
+
+    //2. Put a label for Rest
+    val labelRest = labelManager("REST") + ":" + lineFeed(1)
+    contents += labelRest
+
+    //3. Send the given list to Rest
+    val inputListReferenceNumber = {
+      input match {
+        case Argument(group) =>
+          val tailList = funcRest(Argument(group))
+          for (i <- tailList._1.asInstanceOf[ListBuffer[String]])
+            contents += i
+          tailList._2
+      }
+    }
+
+    //4. Get given list's size and store the size into the local space.
+    contents += "aload " + inputListReferenceNumber + lineFeed(1)
+    contents += "dup" + lineFeed(1)
+    val store = helperStore("i")
+    contents += store._1
+    val nthCounterReferenceNumber = store._2
 
 
 
+    functionSwitch = previousSwitch
     bodyWriter(contents)
     contents
   }
 
-  //*********************************** Macro End
+  //*********************************** Function End
 
+  //*********************************** Function Helper Start
+
+  //Used by List and Sort
+  def helperNewList: (ListBuffer[String], Int) = {
+    val result = new ListBuffer[String]
+
+    result += "new java/util/ArrayList" + lineFeed(1)
+    result += "dup" + lineFeed(1)
+    result += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
+
+    val store = helperStore("a")
+    result += store._1
+    val variableNumber = store._2
+
+    val info = ("list" + variableNumber -> variableNumber)
+    variableTable += info
+
+    (result, variableNumber)
+  }
+
+  def helperStore(input: String): (String, Int) = {
+    val numberOfArgs = variableTable.size
+    val variableNumber = {
+      if (!numberOfArgs.equals(0))
+        numberOfArgs
+      else
+        0
+    }
+    val result = input + "store " + variableNumber + lineFeed(1)
+    (result, variableNumber)
+  }
+  //*********************************** Function Helper End
 
 
 
@@ -580,7 +653,7 @@ class TGByteCodeGenerator(classname: String) {
       case "list" => funcList(secondInput)
       case "nth" => funcListNth(secondInput)
       case "rest" => funcRest(secondInput)
-      case "sort" => macroSort(secondInput)
+      case "sort" => funcSort(secondInput)
     }
   }
 
