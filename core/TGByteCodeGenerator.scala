@@ -23,8 +23,6 @@ class TGByteCodeGenerator(classname: String) {
   //Switch also let a function knows who's called.
   //switch._1 shows if userFunction works and switch._2 shows the userFunction's name.
   var userFunctionSwitch = (0, "")
-  //Indicates if a calculation function like arithmetic functions and boolean functions is processed or not
-  var calculationFunctionSwitch = (0, "")
   var functionSwitch = (0, "")
   //Used to avoid using the same labels are written many times.
   var labelTable = Map[String, Int]()
@@ -62,10 +60,16 @@ class TGByteCodeGenerator(classname: String) {
   //*********************************** Function Start
   //2 integer numbers addition
   def funcPlus(input: Expr): ListBuffer[String] = {
-    val name = "plus"
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "plus")
+
     input match {
       case Argument(group) =>
         group(0) match {
@@ -86,18 +90,24 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "iadd" + lineFeed(2)
     }
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   //2 integer numbers substraction
   def funcMinus(input: Expr): ListBuffer[String] = {
-    val name = "minus"
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "minus")
+
     input match {
       case Argument(group) =>
         group(0) match {
@@ -118,18 +128,24 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "isub" + lineFeed(2)
     }
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   //2 integer numbers multiplication
   def funcMultiply(input: Expr): ListBuffer[String] = {
-    val name = "multi"
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "multi")
+
     input match {
       case Argument(group) =>
         group(0) match {
@@ -150,18 +166,24 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "imul" + lineFeed(2)
     }
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   //2 integer numbers remainder
   def funcRemainder(input: Expr): ListBuffer[String] = {
-    val name = "rem"
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "rem")
+
     input match {
       case Argument(group) =>
         group(0) match {
@@ -182,24 +204,23 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += "irem" + lineFeed(2)
     }
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   def funcEqual(input: Expr): ListBuffer[String] = {
-    val name = "equal"
+    val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
     val nested = {
-      if (functionSwitch._1.equals(1)) {
+      if (functionSwitch._1.equals(1))
         1
-      } else
+      else
         0
     }
+    functionSwitch = (1, "equal")
 
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
-    val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
         group(0) match {
@@ -225,19 +246,24 @@ class TGByteCodeGenerator(classname: String) {
     for(i <- hEqual)
       contents += i
 
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
     if(nested.equals(0))
       bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   //Supports multiple Integer arguments
   def funcOr(input: Expr): ListBuffer[String] = {
-    val name = "or"
-    if(calculationFunctionSwitch._1.equals(0))
-      calculationFunctionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "or")
+
     input match {
       case Argument(group) =>
         val labelTrue = labelManager("TRUE")
@@ -269,17 +295,25 @@ class TGByteCodeGenerator(classname: String) {
         //If it fails, it skips the True: part
         contents += labelEscapeor + ":" + lineFeed(2)
     }
-    if(calculationFunctionSwitch._2.equals(name))
-      calculationFunctionSwitch = (0, "")
-    bodyWriter(contents)
+
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
   def funcIf(input: Expr): ListBuffer[String] = {
-    val name = "if"
-    if(functionSwitch._1.equals(0))
-      functionSwitch = (1, name)
     val contents = new ListBuffer[String]
+    val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+
+    functionSwitch = (1, "if")
+
     input match {
       case Argument(group) =>
         val hIf = helperIf("equal")
@@ -326,9 +360,9 @@ class TGByteCodeGenerator(classname: String) {
         }
         contents += hIf._4
     }
-    if(functionSwitch._2.equals(name))
-      functionSwitch = (0, "")
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
   }
 
@@ -447,9 +481,8 @@ class TGByteCodeGenerator(classname: String) {
     //Put 'I' back to outParam.
     //outParam = "I"
 
-    if(nested.equals(0)) {
+    if(nested.equals(0))
       bodyWriter(contents)
-    }
     functionSwitch = previousSwitch
     (contents, variableNumber)
   }
@@ -556,15 +589,16 @@ class TGByteCodeGenerator(classname: String) {
 
   def funcSort(input: Expr): ListBuffer[String] = {
     val contents = new ListBuffer[String]
-    var nested = 0
     val previousSwitch = functionSwitch
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
+    }
+    functionSwitch = (1, "sort")
     outParam = "Ljava/lang/Object;"
 
-    if (functionSwitch._1.equals(1)) {
-      nested = 1
-    }
-
-    functionSwitch = (1, "sort")
 
     //1. New list.
     val hNewList = helperNewList
@@ -714,8 +748,9 @@ class TGByteCodeGenerator(classname: String) {
 
     contents += hIf1._4
 
+    if(nested.equals(0))
+      bodyWriter(contents)
     functionSwitch = previousSwitch
-    bodyWriter(contents)
     contents
   }
 
@@ -851,7 +886,7 @@ class TGByteCodeGenerator(classname: String) {
     contentsForBodyWriter += numResult
     contentsForReturn = numResult
 
-    if(functionSwitch._1.equals(0) & userFunctionSwitch._1.equals(0) & calculationFunctionSwitch._1.equals(0)) {
+    if(functionSwitch._1.equals(0) & userFunctionSwitch._1.equals(0)) {
       bodyWriter(contentsForBodyWriter)
     }
     contentsForReturn
@@ -955,8 +990,16 @@ class TGByteCodeGenerator(classname: String) {
       }
     }
 
-    //Efficient code only works with only one recursive call and it shouldn't be with calculation functions.
-    if(name.equals(userFunctionSwitch._2) && numberOfRecursiveCall.equals(1) && calculationFunctionSwitch.equals(0)) {
+    //Efficient code only works with only one recursive call
+    //It shouldn't be with some functions: Plus, Minus, Multiply, Remainder, Or, Equal.
+    if(name.equals(userFunctionSwitch._2)
+      && numberOfRecursiveCall.equals(1)
+      && !functionSwitch._2.equals("plus")
+      && !functionSwitch._2.equals("minus")
+      && !functionSwitch._2.equals("multi")
+      && !functionSwitch._2.equals("rem")
+      && !functionSwitch._2.equals("or")
+      && !functionSwitch._2.equals("equal")) {
       var numberOfArgs = args.size
       while (numberOfArgs > 0) {
         contents += "istore " + (numberOfArgs - 1) + lineFeed(1)
