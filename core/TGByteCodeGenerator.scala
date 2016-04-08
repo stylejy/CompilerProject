@@ -218,15 +218,13 @@ class TGByteCodeGenerator(classname: String) {
             for(i <- userFunction(a, b))
               contents += i
         }
-        val labelEqual = labelManager("EQUAL")
-        val labelStopEqual = labelManager("STOPEQUAL")
-        contents += "if_icmpeq " + labelEqual + lineFeed(1)
-        contents += "iconst_0" + lineFeed(1)
-        contents += "goto " + labelStopEqual + lineFeed(1)
-        contents +=  labelEqual + ":" + lineFeed(1)
-        contents += "iconst_1" + lineFeed(1)
-        contents += labelStopEqual + ":" + lineFeed(2)
+
     }
+
+    val hEqual = helperComparison("equal")
+    for(i <- hEqual)
+      contents += i
+
     if(calculationFunctionSwitch._2.equals(name))
       calculationFunctionSwitch = (0, "")
     if(nested.equals(0))
@@ -284,8 +282,8 @@ class TGByteCodeGenerator(classname: String) {
     val contents = new ListBuffer[String]
     input match {
       case Argument(group) =>
-        val labelFalse = labelManager("FALSE")
-        val labelEscapeif = labelManager("ESCAPEIF")
+        val hIf = helperIf("equal")
+
         group(0) match {
           case Value(a) => contents += singleValue(a)
           case Bool("true") => contents += numberRange(1)
@@ -298,7 +296,9 @@ class TGByteCodeGenerator(classname: String) {
               contents += i
           case _ => contents += numberRange(0)
         }
-        contents += "ifeq " + labelFalse + lineFeed(1)
+
+        contents += hIf._1
+
         group(1) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) =>
@@ -309,8 +309,10 @@ class TGByteCodeGenerator(classname: String) {
             for(i <- userFunction(a, b))
               contents += i
         }
-        contents += "goto " + labelEscapeif + lineFeed(1)
-        contents += labelFalse + ":" + lineFeed(1)
+
+        contents += hIf._2
+        contents += hIf._3
+
         group(2) match {
           case IntNumber(a) => contents += numberRange(a.toInt)
           case Function(a, b) =>
@@ -322,7 +324,7 @@ class TGByteCodeGenerator(classname: String) {
               contents += i
             }
         }
-        contents += labelEscapeif + ":" + lineFeed(2)
+        contents += hIf._4
     }
     if(functionSwitch._2.equals(name))
       functionSwitch = (0, "")
@@ -398,26 +400,24 @@ class TGByteCodeGenerator(classname: String) {
 
   //It saves its parent's functionSwitch information and put the information back to the switch.
   def funcList(input: Expr): (ListBuffer[String], Int) = {
-    val name = "list"
     val contents = new ListBuffer[String]
-    var nested = 0
-    var parentName = ""
+    val previousSwitch = functionSwitch
     outParam = "Ljava/lang/Object;"
 
-    if(functionSwitch._1.equals(0))
-      functionSwitch = (1, name)
-    else {
-      contents += lineFeed(1)
-      nested = 1
-      parentName = functionSwitch._2
-      functionSwitch = (1, name)
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
     }
 
+    functionSwitch = (1, "list")
+
     //New list
-    val newList = helperNewList
-    for(i <- newList._1)
+    val hNewList = helperNewList
+    for(i <- hNewList._1)
       contents += i
-    val variableNumber = newList._2
+    val variableNumber = hNewList._2
 
     input match {
       case Argument(group) =>
@@ -437,7 +437,8 @@ class TGByteCodeGenerator(classname: String) {
           contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
           contents += "pop" + lineFeed(1)
         }
-        if(nested.equals(1) || userFunctionSwitch.equals((1, "println")))
+        println(functionSwitch._2)
+        if((nested.equals(1) || previousSwitch._2.equals("println")) && !previousSwitch._2.equals("rest"))
           contents += "aload " + variableNumber + lineFeed(1)
     }
 
@@ -449,28 +450,24 @@ class TGByteCodeGenerator(classname: String) {
     if(nested.equals(0)) {
       bodyWriter(contents)
     }
-    if(functionSwitch._2.equals(name))
-      functionSwitch = (1, parentName)
-    else
-      functionSwitch = (0, "")
+    functionSwitch = previousSwitch
     (contents, variableNumber)
   }
 
   //It saves its parent's functionSwitch information and put the information back to the switch.
   def funcListNth(input: Expr): ListBuffer[String] = {
-    val name = "nth"
     val contents = new ListBuffer[String]
-    var nested = 0
-    var parentName = ""
+    val previousSwitch = functionSwitch
     outParam = "Ljava/lang/Object;"
 
-    if(functionSwitch._1.equals(0))
-      functionSwitch = (1, name)
-    else {
-      nested = 1
-      parentName = functionSwitch._2
-      functionSwitch = (1, name)
+    val nested = {
+      if (functionSwitch._1.equals(1))
+        1
+      else
+        0
     }
+
+    functionSwitch = (1, "nth")
 
     input match {
       case Argument(group) =>
@@ -489,19 +486,16 @@ class TGByteCodeGenerator(classname: String) {
             contents += evalExpression(group(1)).toString
         }
 
-        contents += "invokevirtual java/util/ArrayList get (I)Ljava/lang/Object;" + lineFeed(1)
+        contents += helperNth()
 
     }
     if(nested.equals(0))
       bodyWriter(contents)
-    if(functionSwitch._2.equals(name))
-      functionSwitch = (1, parentName)
-    else
-      functionSwitch = (0, "")
+    functionSwitch = previousSwitch
     contents
   }
 
-  def funcRest(input: Expr): (ListBuffer[String], Int) = {
+  def funcRest(input: Expr): (ListBuffer[String], Int, String) = {
     val contents = new ListBuffer[String]
     var nested = 0
     val previousSwitch = functionSwitch
@@ -531,7 +525,16 @@ class TGByteCodeGenerator(classname: String) {
         }
     }
 
+    //For only sort function
+    val labelForSort = {
+      val labelResult = labelManager("OUTER")
+      if (previousSwitch._2.equals("sort")) {
+        contents += labelResult + ":" + lineFeed(1)
+      }
+      labelResult
+    }
 
+    contents += "aload " + referenceNumberOfList + lineFeed(1)
     contents += "iconst_0" + lineFeed(1)
     contents += "invokevirtual java/util/ArrayList remove (I)Ljava/lang/Object;" + lineFeed(1)
 
@@ -548,7 +551,7 @@ class TGByteCodeGenerator(classname: String) {
       case "rest" | "nth" => contents += "aload " + referenceNumberOfList + lineFeed(1)
       case _ =>
     }
-    (contents, referenceNumberOfList)
+    (contents, referenceNumberOfList, labelForSort)
   }
 
   def funcSort(input: Expr): ListBuffer[String] = {
@@ -563,35 +566,153 @@ class TGByteCodeGenerator(classname: String) {
 
     functionSwitch = (1, "sort")
 
-    //1. New list
-    val newList = helperNewList
-    for(i <- newList._1)
+    //1. New list.
+    val hNewList = helperNewList
+    for(i <- hNewList._1)
       contents += i
-    val variableNumber = newList._2
+    val newListVariableNumber = hNewList._2
 
-    //2. Put a label for Rest
-    val labelRest = labelManager("REST") + ":" + lineFeed(1)
-    contents += labelRest
-
-    //3. Send the given list to Rest
+    //2. Send the given list to Rest.
+    //Rest will generate outer label for this function
+    var labelOuter = ""
     val inputListReferenceNumber = {
       input match {
         case Argument(group) =>
           val tailList = funcRest(Argument(group))
           for (i <- tailList._1.asInstanceOf[ListBuffer[String]])
             contents += i
+          //get outerlabel
+          labelOuter = tailList._3
           tailList._2
       }
     }
 
-    //4. Get given list's size and store the size into the local space.
+    //2.1 Cast the type(Object -> int) and the store the head as a local variable
+    //** can't use dup here because invokevirtual is used later.
+    contents += "checkcast java/lang/Integer" + lineFeed(1)
+    contents += "invokevirtual java/lang/Integer intValue ()I" + lineFeed(1)
+    val hStoreHead = helperStore("i", "sort")
+    contents += hStoreHead._1 + lineFeed(1)
+
+    //3. Get given list's size and store the size into the local space.
     contents += "aload " + inputListReferenceNumber + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList size ()I" + lineFeed(1)
     contents += "dup" + lineFeed(1)
-    val store = helperStore("i")
-    contents += store._1
-    val nthCounterReferenceNumber = store._2
+    val hStore = helperStore("i", "sort")
+    contents += hStore._1 + lineFeed(1)
+    val nthCounterReferenceNumber = hStore._2
+
+    //4.1 Check if size is not zero.
+    val hIfCheckzero = helperComparison("equalzero")
+    for(i <- hIfCheckzero)
+      contents += i
+
+    //4.2 Unless size is not zero, start comparing.
+    val hIf1 = helperIf("notequal")
+    contents += hIf1._1
+    //nth number - 1 because nth number is size which is always 1 greater than what we expected to call from the list.
+    contents += "iinc " + nthCounterReferenceNumber + " -1" + lineFeed(1)
+
+    //4.3 Put a label for the inner loop
+    val labelInner = labelManager("INNER")
+    contents += labelInner + ":" + lineFeed(1)
+
+    //**catch if nthCounterNumber is less than zero
+    //it happens once the iteration is done and the head should be the smallest value except already in the new list.
+    contents += "iload " + nthCounterReferenceNumber + lineFeed(1)
+    val hIfCatchLessZero = helperIf("lesszero")
+    contents += hIfCatchLessZero._1 + lineFeed(1)
+    contents += hIfCatchLessZero._2
+    contents += hIfCatchLessZero._3
+
+    contents += "aload " + newListVariableNumber + lineFeed(1)
+    contents += "iload " + hStoreHead._2 + lineFeed(1)
+    contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
+    contents += "pop" + lineFeed(1)
+    contents += "goto " + labelOuter + lineFeed(1)
+
+    contents += hIfCatchLessZero._4 + lineFeed(1)
+
+    //4.4 if outer false(not zero)
+    contents += "aload " + inputListReferenceNumber + lineFeed(1)
+    contents += "iload " + nthCounterReferenceNumber + lineFeed(1)
+    //get a value and cast it to int
+    contents += helperNth()
+    contents += "checkcast java/lang/Integer" + lineFeed(1)
+    contents += "invokevirtual java/lang/Integer intValue ()I" + lineFeed(1)
+
+    //4.5 Call the head and then comparison of the list's head with a element of the tail.
+    contents += "iload " + hStoreHead._2 + lineFeed(1)
+    val hGreater = helperComparison("lesser")
+    for(i <- hGreater)
+      contents += i
+
+    //4.6 Inner loop start
+    val hIf2 = helperIf("equal")
+    contents += hIf2._1
+
+    //if inner false
+    contents += "aload " + inputListReferenceNumber + lineFeed(1)
+    contents += "iload " + nthCounterReferenceNumber + lineFeed(1)
+    contents += helperNth()
+
+    //Store the value to swap
+    val hStoreTemp = helperStore("a", "sort")
+    contents += hStoreTemp._1 + lineFeed(1)
+    contents += "aload " + inputListReferenceNumber + lineFeed(1)
+    contents += "iload " + nthCounterReferenceNumber + lineFeed(1)
+    contents += "iload " + hStoreHead._2 + lineFeed(1)
+    contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList set (ILjava/lang/Object;)Ljava/lang/Object;" + lineFeed(1)
+    contents += "pop" + lineFeed(1)
+    contents += "aload " + hStoreTemp._2 + lineFeed(1)
+    //cast
+    contents += "checkcast java/lang/Integer" + lineFeed(1)
+    contents += "invokevirtual java/lang/Integer intValue ()I" + lineFeed(1)
+    contents += hStoreHead._1 + lineFeed(1)
+
+    //decrease the pointing number to iterate
+    contents += "iinc " + nthCounterReferenceNumber + " -1" + lineFeed(1)
+    contents += "goto " + labelInner + lineFeed(1)
 
 
+    //contents += hIf2._2
+    //if inner false (means 0, means the list value is larger than the head), just iterate.
+    contents += hIf2._3
+
+    contents += "iinc " + nthCounterReferenceNumber + " -1" + lineFeed(1)
+    contents += "goto " + labelInner + lineFeed(1)
+
+
+
+    //if inner true.
+    contents += "aload " + newListVariableNumber + lineFeed(1)
+    contents += "iload " + hStoreHead._2 + lineFeed(1)
+    contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
+    contents += "pop" + lineFeed(1)
+    contents += "goto " + labelOuter + lineFeed(1)
+
+    contents += hIf2._4
+
+    //**************************** Inner loop End
+
+
+    contents += hIf1._2
+    contents += hIf1._3
+
+    //add the last remained value in the rest list to the new list
+    contents += "aload " + newListVariableNumber + lineFeed(1)
+    contents += "iload " + hStoreHead._2 + lineFeed(1)
+    contents += "invokestatic java/lang/Integer valueOf (I)Ljava/lang/Integer;" + lineFeed(1)
+    contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
+    contents += "pop" + lineFeed(1)
+
+    //if outer true(zero)
+    contents += "aload " + newListVariableNumber + lineFeed(1)
+
+    contents += hIf1._4
 
     functionSwitch = previousSwitch
     bodyWriter(contents)
@@ -610,17 +731,14 @@ class TGByteCodeGenerator(classname: String) {
     result += "dup" + lineFeed(1)
     result += "invokespecial java/util/ArrayList <init> ()V" + lineFeed(1)
 
-    val store = helperStore("a")
-    result += store._1
-    val variableNumber = store._2
-
-    val info = ("list" + variableNumber -> variableNumber)
-    variableTable += info
+    val hStore = helperStore("a", "list")
+    result += hStore._1
+    val variableNumber = hStore._2
 
     (result, variableNumber)
   }
 
-  def helperStore(input: String): (String, Int) = {
+  def helperStore(inputType: String, inputName: String): (String, Int) = {
     val numberOfArgs = variableTable.size
     val variableNumber = {
       if (!numberOfArgs.equals(0))
@@ -628,9 +746,76 @@ class TGByteCodeGenerator(classname: String) {
       else
         0
     }
-    val result = input + "store " + variableNumber + lineFeed(1)
+    val result = inputType + "store " + variableNumber + lineFeed(1)
+    val info = (inputName + variableNumber -> variableNumber)
+    variableTable += info
     (result, variableNumber)
   }
+
+  def helperComparison(input: String): ListBuffer[String] = {
+    val result = new ListBuffer[String]
+
+    val comparatorName = input
+
+    val comparator = {
+      //Between two vaules
+      if (comparatorName.equals("equal")) {
+        "if_icmpeq "
+      }
+      else if(comparatorName.equals("greater")) {
+        "if_icmpgt "
+      }
+      else if(comparatorName.equals("lesser")) {
+        "if_icmplt "
+      }
+      //Take one value and compare to zero
+      else if(comparatorName.equals("equalzero")) {
+        "ifeq "
+      }
+      else if(comparatorName.equals("lesszero")) {
+        "iflt "
+      }
+    }
+
+    val labelStart = labelManager(comparatorName.toUpperCase())
+    val labelStop = labelManager("STOP"+comparatorName.toUpperCase)
+
+    result += comparator + labelStart + lineFeed(1)
+    result += "iconst_0" + lineFeed(1)
+    result += "goto " + labelStop + lineFeed(1)
+    result +=  labelStart + ":" + lineFeed(1)
+    result += "iconst_1" + lineFeed(1)
+    result += labelStop + ":" + lineFeed(2)
+
+    result
+  }
+
+  def helperIf(input: String): (String, String, String, String) = {
+    val labelFalse = labelManager("FALSE")
+    val labelEscapeif = labelManager("ESCAPEIF")
+
+    val equalType = {
+      if (input.equals("equal"))
+        "ifeq "
+      else if (input.equals("notequal"))
+        "ifne "
+      else if (input.equals("lesszero"))
+        "iflt "
+    }
+
+    val valueIfeq = equalType + labelFalse + lineFeed(1)
+    val valueGotoEscape = "goto " + labelEscapeif + lineFeed(1)
+    val valueLabelTrue = labelFalse + ":" + lineFeed(1)
+    val valueLabelEscapeif = labelEscapeif + ":" + lineFeed(2)
+
+    (valueIfeq, valueGotoEscape, valueLabelTrue, valueLabelEscapeif)
+  }
+
+  def helperNth(): String = {
+    val result = "invokevirtual java/util/ArrayList get (I)Ljava/lang/Object;" + lineFeed(1)
+    result
+  }
+
   //*********************************** Function Helper End
 
 

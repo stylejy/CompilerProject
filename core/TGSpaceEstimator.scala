@@ -183,6 +183,8 @@ class TGSpaceEstimator {
           case Argument(group) =>
             expression(group(0))
         }
+      case "sort" => returnResult(5, 4) //needs tightening the space
+
       case _ => (localSize, stackSize)
     }
   }
