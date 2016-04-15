@@ -7,7 +7,7 @@ import scala.collection.{GenSeq, immutable, mutable}
   * Created by stylejy on 18/11/2015.
   * Thanks GOD for all.
   */
-class TGByteCodeGenerator(classname: String) {
+class TGCodeGenerator(classname: String) {
   //whole ast initially empty
   var ast = ""
   val pw = new PrintWriter(new File(classname+".tgcode"))
@@ -940,14 +940,10 @@ class TGByteCodeGenerator(classname: String) {
       case Keyword(a) => a
       case IntNumber(a) => singleInt(a)
       case Bool(a) => a.toBoolean
-      case Sentence(a) => a match {
-        case Value(a) => a
-      }
       case Vector(a) => deriveValueFromVector(a)
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => functionSelector(a, b)
       case UserFunction(a, b) => userFunction(a, b)
-      //case ListQuote(a) =>
     }
   }
 

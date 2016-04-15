@@ -28,7 +28,6 @@ class TGSpaceEstimator {
       case Keyword(a) => returnResult(localSize, 1)
       case IntNumber(a) => returnResult(localSize, 1)
       case Bool(a) => returnResult(localSize, 1)
-      case Sentence(a) => returnResult(localSize, 1)
       case Argument(a) => returnResult(localSize, stackSize)//it doesn't affect the stack size.
       case Vector(a) => vector(a)
       case Function(a, b) => function(a, b)

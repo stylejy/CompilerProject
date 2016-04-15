@@ -19,13 +19,11 @@ class TGParser(val input: ParserInput) extends Parser {
     Factor
   }
 
-  def Factor = rule { Booleans | List | Parens | Vectors | Functions | Userfunctions | Strings | IntNumbers | Characters }
+  def Factor = rule { Booleans | List | Parens | Vectors | Functions | Userfunctions | IntNumbers | Characters }
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
   def Arguments = rule { oneOrMore(Term).separatedBy(' ') ~> Argument }
-
-  def Strings = rule { "\"" ~ Characters ~ "\"" ~> Sentence }
 
   def Characters = rule { capture(zeroOrMore(CharPredicate.AlphaNum)) ~> Value }
 
@@ -44,15 +42,5 @@ class TGParser(val input: ParserInput) extends Parser {
   //Every function should be with parenthesis, so the rule with the parens below works without interfering with the other factors
   def Userfunctions = rule { '(' ~ Characters ~ ' ' ~ Arguments ~ ')' ~> UserFunction }
 
-
-  /*
-  def Arithmetic = rule { '+' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Addition | '-' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Substraction | '*' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Multiplication | '/' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Division | '%' ~ (' ' ~ (Term ~ ' ' ~ Term)) ~> Remainder }
-
-  def Lists = rule { '(' ~ oneOrMore(Characters).separatedBy(' ') ~ ')' ~> List }
-
-  def Maps = rule { '{' ~ oneOrMore(Characters).separatedBy(' ') ~ '}' ~> Map }
-
-  def Sets = rule { "#{" ~ oneOrMore(Characters).separatedBy(' ') ~ '}' ~> Set }
-  */
 }
 

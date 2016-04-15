@@ -6,7 +6,7 @@ import scala.collection.mutable.ListBuffer
   * Created by stylejy on 13/12/2015.
   */
 //dependentDepth: Integer number shows depth from the root.
-class TGTreeEvaluator {
+class TGEvaluator {
   //Flag to show if List is used by ListFuctions like nth and first
   var listUsedByListFunction = 0
 
@@ -16,9 +16,6 @@ class TGTreeEvaluator {
       case Keyword(a) => a
       case IntNumber(a) => a.toInt
       case Bool(a) => a.toBoolean
-      case Sentence(a) => a match {
-        case Value(a) => a
-      }
       case Vector(a) => deriveValueFromVector(a)
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => evalFunction(a, b, vTable, fTable)
@@ -345,14 +342,12 @@ class TGTreeEvaluator {
           val value1 = group(0) match {
             case Value(a) => evalExpression(inputVTable.list(a), inputVTable, inputFTable)
             case IntNumber(a) => a.toInt
-            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }
           val value2 = group(1) match {
             case Value(a) => evalExpression(inputVTable.list(a), inputVTable, inputFTable)
             case IntNumber(a) => a.toInt
-            case Sentence(a) => a.toString
             case Function(a, b) => evalFunction(a, b, inputVTable, inputFTable)
             case UserFunction(a, b) => evalUserFunction(a, b, inputVTable, inputFTable)
           }

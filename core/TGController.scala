@@ -14,7 +14,7 @@ class TGController {
   val source = Source.fromFile(file)
   //Split the pure name without its type to pass the name as the class name in JVM code.
   val name = file.split('.')(0)
-  val generator = new TGByteCodeGenerator(name)
+  val generator = new TGCodeGenerator(name)
 
   for(line <- source.getLines()) {
     println(line)
@@ -24,7 +24,7 @@ class TGController {
         println("Tree: " + tree)
         generator.run(tree)
         try {
-          val result = new TGTreeEvaluator().evalExpression(tree, vTable, fTable)
+          val result = new TGEvaluator().evalExpression(tree, vTable, fTable)
           if (result.isInstanceOf[Unit])
             println("RESULT =============> Done!")
           else
