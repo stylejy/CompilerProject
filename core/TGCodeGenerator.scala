@@ -955,6 +955,9 @@ class TGCodeGenerator(classname: String) {
   }
 
   def userFunction(firstInput: Expr, secondInput: Argument): ListBuffer[String] = {
+    var nested = 0
+    val previousSwitch = functionSwitch
+
     val contents = new ListBuffer[String]
     val name = firstInput match {
       case Value(a) => a
@@ -964,7 +967,11 @@ class TGCodeGenerator(classname: String) {
       case Argument(a) => a
     }
 
-    countRecursiveCalls(name)
+    if (functionSwitch._1.equals(1)) {
+      nested = 1
+    }
+
+    functionSwitch = (1, "userFunction")
 
     for (i <- args) {
       i match {
@@ -1007,14 +1014,10 @@ class TGCodeGenerator(classname: String) {
       contents += userFunctionTable(name)
     }
 
-    bodyWriter(contents)
+    if(nested.equals(0))
+      bodyWriter(contents)
+    functionSwitch = previousSwitch
     contents
-  }
-
-  def countRecursiveCalls(input: String): Unit = {
-    val array = ast.split(input)
-    //array.size says the larger number by 2 than the number of its actual recursive calls
-    numberOfRecursiveCall = array.size - 2
   }
 
   def deriveValueFromVector(inputVector: immutable.Seq[Expr]): String = {

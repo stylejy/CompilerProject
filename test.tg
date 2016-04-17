@@ -1,1 +1,2 @@
-(println (sort (list 2 4 3 56 2 56 2 34 5 2 34 2 34 2 3 5 34 5)))
+(defn test [x x] (+ x x))
+(println (test 3 4))
