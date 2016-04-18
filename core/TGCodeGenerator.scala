@@ -471,7 +471,7 @@ class TGCodeGenerator(classname: String) {
           contents += "invokevirtual java/util/ArrayList add (Ljava/lang/Object;)Z" + lineFeed(1)
           contents += "pop" + lineFeed(1)
         }
-        println(functionSwitch._2)
+        //println(functionSwitch._2)
         if((nested.equals(1) || previousSwitch._2.equals("println")) && !previousSwitch._2.equals("rest"))
           contents += "aload " + variableNumber + lineFeed(1)
     }
@@ -1050,7 +1050,7 @@ class TGCodeGenerator(classname: String) {
     val functionName = firstInput
     val variableName = secondInput
 
-    println("add Local Variable: " + functionName + " " + variableName)
+    //println("add Local Variable: " + functionName + " " + variableName)
 
     if(userFunctionSwitch._1.equals(1)) {
       try {
@@ -1081,7 +1081,7 @@ class TGCodeGenerator(classname: String) {
     val variableName = secondInput
     //refurns the local variable number by function
     if(!functionName.equals("main")) {
-      println("get Local Variable: " + functionName + " " + variableName)
+      //println("get Local Variable: " + functionName + " " + variableName)
       userFunctionVariableTable(functionName)(variableName)
     }
     else

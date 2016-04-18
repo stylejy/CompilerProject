@@ -118,33 +118,6 @@ class TGEvaluator {
     value
   }
 
-  /*
-  def functionListQuote(inputArguments: immutable.Seq[Expr], inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
-    var value = "("
-    var counter = 0
-    for (i <- inputArguments) {
-      if (counter.equals(inputArguments.size - 1)) {
-        //needs parenthesis to wrap up the pattern matching
-        value += (i match {
-          case IntNumber(a) => a
-          case ListQuote(a) => functionListQuote(a, inputVTable, inputFTable)
-          case UserFunction(a, b) => a
-        })
-      } else {
-        value += (i match {
-          case IntNumber(a) => a
-          case ListQuote(a) => functionListQuote(a, inputVTable, inputFTable)
-          case UserFunction(a, b) => a
-        })
-        value += " "
-      }
-      counter = counter + 1
-    }
-    value += ")"
-    value
-  }
-
-  */
   def functionRest(inputArguments: Argument, inputVTable: TGVariableSymbolTable, inputFTable: TGFunctionSymbolTable): Any = {
     listUsedByListFunction = 1
 

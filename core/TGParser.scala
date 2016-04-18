@@ -19,7 +19,7 @@ class TGParser(val input: ParserInput) extends Parser {
     Factor
   }
 
-  def Factor = rule { Booleans | List | Parens | Vectors | Functions | Userfunctions | IntNumbers | Characters }
+  def Factor = rule { Booleans | Parens | Vectors | Functions | Userfunctions | IntNumbers | Characters }
 
   def Parens = rule { '(' ~ Expression ~ ')' }
 
@@ -36,8 +36,6 @@ class TGParser(val input: ParserInput) extends Parser {
   def Vectors = rule { '[' ~ oneOrMore(Characters).separatedBy(' ') ~ ']' ~> Vector }
 
   def Booleans = rule { capture( "false" | "true" ) ~> Bool }
-
-  def List = rule { "'(" ~ oneOrMore(Term).separatedBy(' ') ~ ')' ~> ListQuote }
 
   //Every function should be with parenthesis, so the rule with the parens below works without interfering with the other factors
   def Userfunctions = rule { '(' ~ Characters ~ ' ' ~ Arguments ~ ')' ~> UserFunction }

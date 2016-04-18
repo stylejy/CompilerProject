@@ -1,2 +1,1 @@
-(defn test [x x] (+ x x))
-(println (test 3 4))
+(list 2 3)
