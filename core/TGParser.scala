@@ -31,7 +31,7 @@ class TGParser(val input: ParserInput) extends Parser {
 
   def Functions = rule { Keywords ~ ' ' ~ Arguments ~> Function }
 
-    def Keywords = rule { capture( "defn" | "def" | "if" | "and" | "or" | '=' | '+' | '-' | '*'| "rem" | "println" | "list" | "nth" | "rest" | "sort" ) ~> Keyword }
+    def Keywords = rule { capture( "defn" | "if" | "and" | "or" | '=' | '+' | '-' | '*'| "rem" | "println" | "list" | "nth" | "rest" | "sort" ) ~> Keyword }
 
   def Vectors = rule { '[' ~ oneOrMore(Characters).separatedBy(' ') ~ ']' ~> Vector }
 
