@@ -37,6 +37,4 @@ class TGController {
     }
   }
   generator.composer
-
-
 }

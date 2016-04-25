@@ -1,2 +1,2 @@
-(defn gcd [a b] (if (= b 0) a (gcd b (rem a b))))
-(println (gcd 2 1))
+(defn fib [n] (if (= n 0) 0 (if (= n 1) 1 (+ (fib (- n 1)) (fib (- n 2))))))
+(println (fib 6))
