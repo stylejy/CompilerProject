@@ -20,6 +20,7 @@ class TGEvaluator {
       case Argument(a) => deriveValueFromVector(a)
       case Function(a, b) => evalFunction(a, b, vTable, fTable)
       case UserFunction(a, b) => evalUserFunction(a, b, vTable, fTable)
+      //case ListQuote(a) => functionListQuote(a, vTable, fTable)
     }
   }
 

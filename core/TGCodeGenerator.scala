@@ -997,7 +997,6 @@ class TGCodeGenerator(classname: String) {
     //It shouldn't be with some functions: Plus, Minus, Multiply, Remainder, Or, Equal.
     if(name.equals(userFunctionSwitch._2)
       && numberOfRecursiveCall <= 1
-      && userFunctionSwitch._1.equals(0)
       && !functionSwitch._2.equals("plus")
       && !functionSwitch._2.equals("minus")
       && !functionSwitch._2.equals("multi")
